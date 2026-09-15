@@ -330,17 +330,24 @@ $switchColored = IPS_CreateVariable(0);
 IPS_SetVariableCustomPresentation($switchColored, ['PRESENTATION' => VARIABLE_PRESENTATION_SWITCH, 'COLOR_TRUE' => 0x5ECBAC, 'COLOR_FALSE' => 0x222222]);
 SetValue($switchColored, false);
 
+// Wie ein Geräte-Status: Standardprofil ~Switch, darüber eine eigene
+// Schalter-Darstellung; im Menü-Eintrag ist die Statusfarbe aktiv
+$switchStatus = IPS_CreateVariable(0);
+IPS\VariableManager::setVariableProfile($switchStatus, 'TileVisuTest.Switch');
+IPS_SetVariableCustomPresentation($switchStatus, ['PRESENTATION' => VARIABLE_PRESENTATION_SWITCH]);
+SetValue($switchStatus, true);
+
 // Legacy-Darstellung: Profilfarben gelten weiter
 $switchLegacy = IPS_CreateVariable(0);
 IPS_SetVariableCustomProfile($switchLegacy, 'TileVisuTest.Switch');
 SetValue($switchLegacy, true);
 
 $colorMenuItems = [];
-foreach (['cn' => $switchNoColor, 'cc' => $switchColored, 'cl' => $switchLegacy] as $itemId => $varId) {
+foreach (['cn' => $switchNoColor, 'cc' => $switchColored, 'cs' => $switchStatus, 'cl' => $switchLegacy] as $itemId => $varId) {
     $colorMenuItems[] = [
         'Id' => $itemId, 'VariableId' => $varId, 'OpenObjectId' => 0, 'SceneControlId' => 0,
         'ShowName' => true, 'ShowIcon' => true, 'ShowValue' => false,
-        'UseVarColor' => false, 'ColorTrue' => -1, 'ColorFalse' => -1,
+        'UseVarColor' => in_array($itemId, ['cs', 'cl'], true), 'ColorTrue' => -1, 'ColorFalse' => -1,
         'AltName' => '', 'Width' => 100, 'FullWidth' => false,
     ];
 }
@@ -357,7 +364,7 @@ ob_end_clean();
 $colorsOf = function (string $tile): array {
     $out = [];
     foreach ((json_decode(payloadOf($tile), true)['rooms'][0]['menuitems'] ?? []) as $item) {
-        $out[$item['id']] = [$item['colorOn'] ?? null, $item['colorOff'] ?? null];
+        $out[$item['id']] = [$item['colorOn'] ?? null, $item['colorOff'] ?? null, $item['color'] ?? null];
     }
     return $out;
 };
@@ -365,8 +372,10 @@ $roomColors = $colorsOf($colorTile);
 $multiColors = $colorsOf($multiColorTile);
 
 echo "\n== Button-Farben ==\n";
-assertSameValue('switch_presentation_ignores_profile_colors', ['', ''], $roomColors['cn'] ?? null);
-assertSameValue('switch_presentation_uses_own_colors', ['#5ECBAC', '#222222'], $roomColors['cc'] ?? null);
-assertSameValue('legacy_presentation_uses_profile_colors', ['#00FF00', ''], $roomColors['cl'] ?? null);
-assertSameValue('multiroom_switch_presentation_ignores_profile_colors', ['', ''], $multiColors['cn'] ?? null);
-assertSameValue('multiroom_legacy_presentation_uses_profile_colors', ['#00FF00', ''], $multiColors['cl'] ?? null);
+assertSameValue('switch_presentation_ignores_profile_colors', ['', '', ''], $roomColors['cn'] ?? null);
+assertSameValue('switch_presentation_uses_own_colors', ['#5ECBAC', '#222222', ''], $roomColors['cc'] ?? null);
+assertSameValue('status_color_ignores_profile_under_switch_presentation', ['', '', ''], $roomColors['cs'] ?? null);
+assertSameValue('legacy_presentation_uses_profile_colors', ['#00FF00', '', '#00FF00'], $roomColors['cl'] ?? null);
+assertSameValue('multiroom_switch_presentation_ignores_profile_colors', ['', '', ''], $multiColors['cn'] ?? null);
+assertSameValue('multiroom_status_color_ignores_profile_under_switch_presentation', ['', '', ''], $multiColors['cs'] ?? null);
+assertSameValue('multiroom_legacy_presentation_uses_profile_colors', ['#00FF00', '', '#00FF00'], $multiColors['cl'] ?? null);

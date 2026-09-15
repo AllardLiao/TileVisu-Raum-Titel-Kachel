@@ -27,6 +27,13 @@ final class TileVisuColor
             return $presColor;
         }
 
+        // Hat die Variable eine Symcon-8-Darstellung, zeigt Symcon keine Profilfarben -
+        // ein daneben eingetragenes Profil (z.B. ~Switch) zählt dann nicht.
+        $effective = self::getEffectivePresentation($id, $variable);
+        if (!empty($effective) && (string)($effective['PROFILE'] ?? '') === '') {
+            return '';
+        }
+
         $value = GetValue($id);
         $profile = $variable['VariableCustomProfile'] ?: $variable['VariableProfile'];
         if ($profile && IPS_VariableProfileExists($profile)) {
