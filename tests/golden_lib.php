@@ -176,6 +176,29 @@ IPS_SetVariableCustomPresentation(makeVar('adv_options_range', 1, 15),
         ['Min' => 11, 'Max' => 20, 'IconValue' => 'ArrowUp'],
     ]]);
 
+// Werte-Darstellung mit allgemeinem Icon und Intervallen (z.B. Helligkeit):
+// Das Intervall zum Wert hat Vorrang, außerhalb gilt das allgemeine Icon.
+$luxPresentation = [
+    'ICON' => 'Sun', 'COLOR' => -1, 'INTERVALS_ACTIVE' => true,
+    'INTERVALS' => json_encode([
+        ['IntervalMinValue' => 0, 'IntervalMaxValue' => 50, 'IconActive' => true, 'IconValue' => 'moon', 'ColorActive' => true, 'ColorValue' => 0],
+        ['IntervalMinValue' => 751, 'IntervalMaxValue' => 9999, 'IconActive' => true, 'IconValue' => 'cloud-sun', 'ColorActive' => true, 'ColorValue' => 16185239],
+        ['IntervalMinValue' => 10000, 'IntervalMaxValue' => 200000, 'IconActive' => false, 'IconValue' => 'sun-bright', 'ColorActive' => false, 'ColorValue' => 16514816],
+    ]),
+];
+IPS_SetVariableCustomPresentation(makeVar('adv_intervals_over_icon', 1, 800), $luxPresentation);
+IPS_SetVariableCustomPresentation(makeVar('adv_intervals_dark_black', 1, 20), $luxPresentation);
+IPS_SetVariableCustomPresentation(makeVar('adv_intervals_inactive_fallback', 1, 20000), $luxPresentation);
+IPS_SetVariableCustomPresentation(makeVar('adv_intervals_no_match', 1, 500), $luxPresentation);
+IPS_SetVariableCustomPresentation(makeVar('adv_intervals_disabled', 1, 800), ['INTERVALS_ACTIVE' => false] + $luxPresentation);
+
+// Bool-Werte-Darstellung mit allgemeinem Icon und Optionen: Option hat Vorrang
+IPS_SetVariableCustomPresentation(makeVar('adv_options_over_icon', 0, true),
+    ['ICON' => 'Motion', 'OPTIONS' => json_encode([
+        ['Value' => false, 'IconValue' => 'person-circle-xmark'],
+        ['Value' => true, 'IconValue' => 'person-walking'],
+    ])]);
+
 IPS_SetVariableCustomProfile(makeVar('adv_profile_icon_fallback', 1, 99), 'TV.Test.Int');
 IPS_SetVariableCustomProfile(makeVar('profile_assoc_icon', 1, 1), 'TV.Test.Int');
 
@@ -214,7 +237,8 @@ $colorLabels = ['custom_assoc_bool_true', 'custom_assoc_bool_false', 'custom_col
     'std_assoc_color_numeric_string', 'std_assoc_color_int', 'custom_template',
     'custom_presentation_guid_bool', 'std_template_colortrue_string', 'std_presentation_guid_color_int',
     'std_presentation_guid_color_string', 'profile_assoc_color', 'profile_assoc_color_minus1',
-    'custom_color_minus1'];
+    'custom_color_minus1', 'adv_intervals_over_icon', 'adv_intervals_dark_black',
+    'adv_intervals_inactive_fallback', 'adv_intervals_no_match', 'adv_intervals_disabled'];
 foreach ($colorLabels as $label) {
     $result['getPresentationColorHex'][$label] = TileVisuLib::getPresentationColorHex($VARS[$label]);
     $result['getProfileColorHex'][$label] = TileVisuLib::getProfileColorHex($VARS[$label]);
@@ -228,7 +252,9 @@ foreach (['obj_icon', 'custom_icon_direct', 'custom_icontrue_usefalse_off', 'pro
 }
 
 $advLabels = ['custom_icon_direct', 'custom_icontrue_usefalse_off', 'adv_legacy_guid_profile_assoc',
-    'adv_intervals_float', 'adv_options_range', 'adv_profile_icon_fallback', 'profile_assoc_icon'];
+    'adv_intervals_float', 'adv_options_range', 'adv_profile_icon_fallback', 'profile_assoc_icon',
+    'adv_intervals_over_icon', 'adv_intervals_dark_black', 'adv_intervals_inactive_fallback',
+    'adv_intervals_no_match', 'adv_intervals_disabled', 'adv_options_over_icon'];
 foreach ($advLabels as $label) {
     $result['getIconAdvanced'][$label] = TileVisuLib::getIconAdvanced($VARS[$label]);
 }

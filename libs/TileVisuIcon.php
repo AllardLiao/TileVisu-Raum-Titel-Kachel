@@ -128,12 +128,8 @@ final class TileVisuIcon
 
     private static function iconFromPresentation(array $pres, mixed $value, int $vt): string
     {
-        // Direktes Icon
-        foreach (['ICON', 'Icon', 'icon'] as $field) {
-            if (isset($pres[$field]) && (string)$pres[$field] !== '') {
-                return (string)$pres[$field];
-            }
-        }
+        // Wie in der Symcon-Visualisierung: Das Icon zum aktuellen Wert (Intervall,
+        // Option, An/Aus) hat Vorrang, das allgemeine Icon ist nur der Ersatz.
 
         // Boolean: ICON_TRUE/ICON_FALSE
         if ($vt === 0) {
@@ -152,7 +148,18 @@ final class TileVisuIcon
         }
 
         // OPTIONS aus aufgelöster Präsentation
-        return self::iconFromOptions($pres, $value, $vt);
+        $icon = self::iconFromOptions($pres, $value, $vt);
+        if ($icon !== '') {
+            return $icon;
+        }
+
+        // Allgemeines Icon
+        foreach (['ICON', 'Icon', 'icon'] as $field) {
+            if (isset($pres[$field]) && (string)$pres[$field] !== '') {
+                return (string)$pres[$field];
+            }
+        }
+        return '';
     }
 
     private static function iconFromBoolean(array $pres, mixed $value): string
