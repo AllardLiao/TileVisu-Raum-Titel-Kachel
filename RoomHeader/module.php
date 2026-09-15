@@ -178,6 +178,7 @@ class TileVisuRoomHeaderTileEOL extends IPSModule
             $id = (int)$this->ReadPropertyInteger($VariableProperty);
             if ($id > 0 && @IPS_ObjectExists($id)) {
                 $this->RegisterMessage($id, OM_CHANGEHIDDEN);
+                $this->RegisterMessage($id, OM_CHANGENAME);
             }
             if ($id > 0 && @IPS_VariableExists($id)) {
                 $this->RegisterMessage($id, VM_UPDATE);
@@ -192,6 +193,11 @@ class TileVisuRoomHeaderTileEOL extends IPSModule
 
     public function MessageSink($TimeStamp, $SenderID, $Message, $Data)
     {
+        // Angezeigte Namen stammen aus IPS_GetName() - nach einer Umbenennung neu aufbauen
+        if ($Message === OM_CHANGENAME) {
+            $this->ForceUpdate();
+            return;
+        }
         if ($Message === OM_CHANGEHIDDEN) {
             $this->ForceUpdate();
             return;

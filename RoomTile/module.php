@@ -504,6 +504,7 @@ class RoomTile extends IPSModuleStrict
                     $this->RegisterReference($varId);
                     $this->RegisterMessage($varId, VM_UPDATE);
                     $this->RegisterMessage($varId, OM_CHANGEHIDDEN);
+                    $this->RegisterMessage($varId, OM_CHANGENAME);
                     if (!isset($varMap[$varId]) || !is_array($varMap[$varId])) {
                         $varMap[$varId] = [];
                     }
@@ -513,12 +514,14 @@ class RoomTile extends IPSModuleStrict
                 if ($openObjectId > 0 && @IPS_ObjectExists($openObjectId)) {
                     $this->RegisterReference($openObjectId);
                     $this->RegisterMessage($openObjectId, OM_CHANGEHIDDEN);
+                    $this->RegisterMessage($openObjectId, OM_CHANGENAME);
                 }
                 // SceneControl ActiveScene variable tracking
                 $sceneControlId = (int)($row['SceneControlId'] ?? 0);
                 if ($sceneControlId > 0 && $itemId !== '' && @IPS_InstanceExists($sceneControlId)) {
                     $this->RegisterReference($sceneControlId);
                     $this->RegisterMessage($sceneControlId, OM_CHANGEHIDDEN);
+                    $this->RegisterMessage($sceneControlId, OM_CHANGENAME);
                     $activeVar = 0;
                     foreach ((array)@IPS_GetChildrenIDs($sceneControlId) as $cid) {
                         if (@IPS_VariableExists($cid)) {
@@ -530,6 +533,7 @@ class RoomTile extends IPSModuleStrict
                         $this->RegisterReference($activeVar);
                         $this->RegisterMessage($activeVar, VM_UPDATE);
                         $this->RegisterMessage($activeVar, OM_CHANGEHIDDEN);
+                        $this->RegisterMessage($activeVar, OM_CHANGENAME);
                         if (!isset($varMap[$activeVar]) || !is_array($varMap[$activeVar])) {
                             $varMap[$activeVar] = [];
                         }
@@ -550,6 +554,7 @@ class RoomTile extends IPSModuleStrict
                     $this->RegisterReference($varId);
                     $this->RegisterMessage($varId, VM_UPDATE);
                     $this->RegisterMessage($varId, OM_CHANGEHIDDEN);
+                    $this->RegisterMessage($varId, OM_CHANGENAME);
                     if (!isset($varMap[$varId]) || !is_array($varMap[$varId])) {
                         $varMap[$varId] = [];
                     }
@@ -568,6 +573,7 @@ class RoomTile extends IPSModuleStrict
                     $this->RegisterReference($id);
                     $this->RegisterMessage($id, VM_UPDATE);
                     $this->RegisterMessage($id, OM_CHANGEHIDDEN);
+                    $this->RegisterMessage($id, OM_CHANGENAME);
                     if (!isset($varMap[$id]) || !is_array($varMap[$id])) {
                         $varMap[$id] = [];
                     }
@@ -615,6 +621,12 @@ class RoomTile extends IPSModuleStrict
             return;
         }
         try {
+        if ($Message === OM_CHANGENAME) {
+            // Angezeigte Namen stammen aus IPS_GetName() - nach einer Umbenennung neu aufbauen
+            $this->SendDebug('OM_CHANGENAME', 'Sender=' . $SenderID . ' -> FULL RELOAD triggered', 0);
+            $this->UpdateVisualizationValue(json_encode($this->GetFullUpdateMessage()));
+            return;
+        }
         if ($Message === OM_CHANGEHIDDEN) {
             // Nur reloaden wenn sich der Hidden-Status tatsächlich ändert
             $isHidden = false;
