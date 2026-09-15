@@ -74,6 +74,10 @@
       position: fixed;
       left: 0;
       top: 0;
+      box-sizing: border-box;
+      /* Feste Mindestbreite und gleich breite Ziffern: die Blase wackelt nicht,
+         wenn sich die Stellenzahl ändert */
+      min-width: 4.5em;
       padding: 4px 10px;
       border-radius: 8px;
       background: rgba(0, 0, 0, 0.8);
@@ -81,9 +85,22 @@
       font-size: 15px;
       font-weight: 600;
       line-height: 1.2;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
       white-space: nowrap;
       pointer-events: none;
       z-index: 10000;
+      /* Liegt dauerhaft als eigene Ebene bereit; Ein-/Ausblenden und Verschieben
+         lösen so kein Neuzeichnen der Kachel aus */
+      visibility: hidden;
+      opacity: 0;
+      will-change: transform, opacity;
+      transition: opacity 0.12s ease, visibility 0s linear 0.12s;
+    }
+    .dim-bubble.visible {
+      visibility: visible;
+      opacity: 1;
+      transition: opacity 0.12s ease;
     }
     .switch-group { display: flex; gap: 1px; align-items: center; }
     .switch-option {

@@ -398,16 +398,22 @@
     const DIM_BUBBLE_GAP_PX = 8;
     const DIM_BUBBLE_MARGIN_PX = 4;
 
-    function showDimBubble(btn, clientX, text) {
+    function ensureDimBubble() {
       let bubble = document.getElementById('tilevisu-dim-bubble');
-      if (!bubble) {
+      if (!bubble && document.body) {
         bubble = document.createElement('div');
         bubble.id = 'tilevisu-dim-bubble';
         bubble.className = 'dim-bubble';
+        bubble.textContent = '100 %';
         document.body.appendChild(bubble);
       }
-      bubble.textContent = text;
-      bubble.hidden = false;
+      return bubble;
+    }
+
+    function showDimBubble(btn, clientX, text) {
+      const bubble = ensureDimBubble();
+      if (!bubble) return;
+      if (bubble.textContent !== text) bubble.textContent = text;
       const rect = btn.getBoundingClientRect();
       const w = bubble.offsetWidth;
       const h = bubble.offsetHeight;
@@ -418,13 +424,13 @@
       // Oberhalb des Buttons; ist dort kein Platz, darunter
       let top = rect.top - h - DIM_BUBBLE_GAP_PX;
       if (top < DIM_BUBBLE_MARGIN_PX) top = Math.min(rect.bottom + DIM_BUBBLE_GAP_PX, viewH - h - DIM_BUBBLE_MARGIN_PX);
-      bubble.style.left = left + 'px';
-      bubble.style.top = top + 'px';
+      bubble.style.transform = 'translate3d(' + Math.round(left) + 'px, ' + Math.round(top) + 'px, 0)';
+      bubble.classList.add('visible');
     }
 
     function hideDimBubble() {
       const bubble = document.getElementById('tilevisu-dim-bubble');
-      if (bubble) bubble.hidden = true;
+      if (bubble) bubble.classList.remove('visible');
     }
 
     // Wurde gerade gestrichen? Dann gehört der folgende Klick zur Streichbewegung.
@@ -441,6 +447,7 @@
       btn.dataset.rangeMax = String(max);
       btn.classList.add('dimmable');
       setDimLevel(btn, currentValue);
+      ensureDimBubble();
       // Streichen soll keinen Text markieren
       btn.addEventListener('selectstart', (e) => e.preventDefault());
       btn.addEventListener('contextmenu', (e) => e.preventDefault());
