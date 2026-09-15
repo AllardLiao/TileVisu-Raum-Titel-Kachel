@@ -360,7 +360,7 @@ class RoomTile extends IPSModuleStrict
                 $showValue = false;
             }
             if ($altName !== '' || $showName || $hasObject) {
-                $derivedName = $altName !== '' ? $altName : ($hasVar ? (string)@IPS_GetName($varId) : ($hasObject ? $objectName : ''));
+                $derivedName = $altName !== '' ? $this->TranslateLabel($altName) : ($hasVar ? (string)@IPS_GetName($varId) : ($hasObject ? $objectName : ''));
                 if ($derivedName !== '') { $outRoom[$key . 'name'] = $derivedName; }
             }
             if ($valueFormatted !== '' && $showValue) { $outRoom[$key] = $valueFormatted; $outRoom[$key . 'asso'] = $valueFormatted; }
@@ -602,6 +602,10 @@ class RoomTile extends IPSModuleStrict
 
         $this->WriteAttributeString('VarMap', json_encode($varMap));
 
+        // Simple Locale (optional): Sprachwechsel mitbekommen, Beschriftungen übersetzen
+        $this->RegisterSimpleLocaleMessages();
+        $this->RefreshSimpleLocaleLabels();
+
         // Initiales Full Update
         $this->UpdateVisualizationValue(json_encode($this->GetFullUpdateMessage()));
     }
@@ -644,6 +648,14 @@ class RoomTile extends IPSModuleStrict
             $this->WriteAttributeString('HiddenMap', json_encode($hiddenMap));
             $this->SendDebug('OM_CHANGEHIDDEN', 'FULL RELOAD triggered', 0);
             $this->UpdateVisualizationValue(json_encode($this->GetFullUpdateMessage()));
+            return;
+        }
+        if ($Message === IM_CHANGESETTINGS) {
+            // Simple Locale: Sprachwechsel oder neu eingelesener Baum - Beschriftungen neu übersetzen
+            if ($this->IsSimpleLocaleInstance($SenderID) && $this->RefreshSimpleLocaleLabels()) {
+                $this->SendDebug('SimpleLocale', 'Beschriftungen geändert -> FULL RELOAD triggered', 0);
+                $this->UpdateVisualizationValue(json_encode($this->GetFullUpdateMessage()));
+            }
             return;
         }
         if ($Message !== VM_UPDATE) {
@@ -765,7 +777,7 @@ class RoomTile extends IPSModuleStrict
                         try { $obj = @IPS_GetObject($openObjectId); $objectName = (string)($obj['ObjectName'] ?? ''); } catch (Throwable $e) { $objectName = ''; }
                     }
                     if ($altName !== '') {
-                        $delta[] = ['idx' => $idx, 'key' => 'menuitem-' . $itemId . 'name', 'value' => $altName];
+                        $delta[] = ['idx' => $idx, 'key' => 'menuitem-' . $itemId . 'name', 'value' => $this->TranslateLabel($altName)];
                     } elseif ($openObjectId > 0 && $objectName !== '') {
                         $delta[] = ['idx' => $idx, 'key' => 'menuitem-' . $itemId . 'name', 'value' => $objectName];
                     } elseif ($showName) {
@@ -809,7 +821,7 @@ class RoomTile extends IPSModuleStrict
                         }
                     } catch (Throwable $e) {}
                     if ($altName !== '') {
-                        $delta[] = ['idx' => $idx, 'key' => 'infoitem-' . $itemId . 'name', 'value' => $altName];
+                        $delta[] = ['idx' => $idx, 'key' => 'infoitem-' . $itemId . 'name', 'value' => $this->TranslateLabel($altName)];
                     } elseif ($showName) {
                         try { $nm = (string)@IPS_GetName($varId); } catch (Throwable $e) { $nm = ''; }
                         if ($nm !== '') {
@@ -883,7 +895,7 @@ class RoomTile extends IPSModuleStrict
                     $delta[] = [
                         'idx' => $idx,
                         'key' => ($isSwitch ? ('switch' . substr($prop, 6)) : strtolower($prop)) . 'altname',
-                        'value' => (string)$room[$prop . 'AltName']
+                        'value' => $this->TranslateLabel((string)$room[$prop . 'AltName'])
                     ];
                 }
             }
@@ -1206,7 +1218,7 @@ class RoomTile extends IPSModuleStrict
         $r['bgfiltergrayscalemin']  = (float)$this->ReadNumOrDefault($room, 'BgFilterGrayscaleMin', [], 0.0);
         $r['bgfiltergrayscalemax']  = (float)$this->ReadNumOrDefault($room, 'BgFilterGrayscaleMax', [], 0.5);
 
-        $r['roomname'] = (string)($room['RoomName'] ?? '');
+        $r['roomname'] = $this->TranslateLabel((string)($room['RoomName'] ?? ''));
         $r['targetlink'] = (int)($room['Target'] ?? 0);
         $r['targetlinkid'] = (int)($room['TargetLinkId'] ?? 0);
         $r['targetlinkvalue'] = (int)($room['TargetLinkValue'] ?? 0);
@@ -1332,13 +1344,13 @@ class RoomTile extends IPSModuleStrict
 
         // Alt-Namen (fixed only)
         for ($i = 1; $i <= 5; $i++) {
-            $r['switch' . $i . 'altname'] = (string)($room['Switch' . $i . 'AltName'] ?? '');
-            $r['info' . $i . 'altname'] = (string)($room['Info' . $i . 'AltName'] ?? '');
+            $r['switch' . $i . 'altname'] = $this->TranslateLabel((string)($room['Switch' . $i . 'AltName'] ?? ''));
+            $r['info' . $i . 'altname'] = $this->TranslateLabel((string)($room['Info' . $i . 'AltName'] ?? ''));
         }
-        $r['infoleftaltname'] = (string)($room['InfoLeftAltName'] ?? '');
-        $r['inforightaltname'] = (string)($room['InfoRightAltName'] ?? '');
-        $r['infoleft2altname'] = (string)($room['InfoLeft2AltName'] ?? '');
-        $r['inforight2altname'] = (string)($room['InfoRight2AltName'] ?? '');
+        $r['infoleftaltname'] = $this->TranslateLabel((string)($room['InfoLeftAltName'] ?? ''));
+        $r['inforightaltname'] = $this->TranslateLabel((string)($room['InfoRightAltName'] ?? ''));
+        $r['infoleft2altname'] = $this->TranslateLabel((string)($room['InfoLeft2AltName'] ?? ''));
+        $r['inforight2altname'] = $this->TranslateLabel((string)($room['InfoRight2AltName'] ?? ''));
     }
 
     private function fillInfoAndButtons(array &$out, array $room): void
@@ -1819,7 +1831,7 @@ class RoomTile extends IPSModuleStrict
                 try { $obj = @IPS_GetObject($openObjectId); $objectName = (string)($obj['ObjectName'] ?? ''); } catch (Throwable $e) { $objectName = ''; }
             }
             if ($altName !== '') {
-                $delta[] = ['idx' => 0, 'key' => $key . 'name', 'value' => $altName];
+                $delta[] = ['idx' => 0, 'key' => $key . 'name', 'value' => $this->TranslateLabel($altName)];
             } elseif ($openObjectId > 0 && $objectName !== '') {
                 $delta[] = ['idx' => 0, 'key' => $key . 'name', 'value' => $objectName];
             } elseif ($showName) {

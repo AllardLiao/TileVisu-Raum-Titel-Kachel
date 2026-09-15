@@ -18,6 +18,137 @@ declare(strict_types=1);
 trait TileVisuRoomHelpers
 {
     // ---------------------------------------------------------------------
+    // Simple Locale (optional)
+    //
+    // Ist das Modul Simple Locale installiert, werden die frei eingegebenen
+    // Texte der Kachel - Raumnamen und alternative Namen - in die aktive Sprache
+    // der Visualisierung übersetzt, in der die Kachel liegt. Ohne Simple Locale
+    // bleibt alles unverändert. Variablen- und Objektnamen übersetzt Simple
+    // Locale selbst, hier geht es nur um Texte aus der Konfiguration.
+    //
+    // Die Übersetzungen werden in ApplyChanges() und bei jeder Änderung einer
+    // Simple-Locale-Instanz (IM_CHANGESETTINGS, z.B. Sprachwechsel) ermittelt
+    // und in einem Puffer gehalten; beim Rendern wird nur nachgeschlagen.
+    // ---------------------------------------------------------------------
+
+    private ?array $simpleLocaleLabels = null;
+
+    private function GetSimpleLocaleInstanceIDs(): array
+    {
+        if (!function_exists('SLOC_IsResponsibleFor') || !function_exists('SLOC_TranslateExternalTexts')) {
+            return [];
+        }
+
+        return IPS_GetInstanceListByModuleID('{1A2E3892-FE35-9E4E-A3A8-B983B0C41F64}');
+    }
+
+    private function RegisterSimpleLocaleMessages(): void
+    {
+        foreach ($this->GetSimpleLocaleInstanceIDs() as $id) {
+            $this->RegisterMessage($id, IM_CHANGESETTINGS);
+        }
+    }
+
+    // Die Simple-Locale-Instanz, in deren Visualisierungs-Baum diese Kachel liegt.
+    // 0, wenn keine oder mehrere zuständig sind - dann wird nicht übersetzt.
+    private function FindSimpleLocaleInstance(): int
+    {
+        $responsible = [];
+        foreach ($this->GetSimpleLocaleInstanceIDs() as $id) {
+            try {
+                if (SLOC_IsResponsibleFor($id, $this->InstanceID)) {
+                    $responsible[] = $id;
+                }
+            } catch (Throwable $e) {}
+        }
+        if (count($responsible) > 1) {
+            $this->SendDebug('SimpleLocale', 'Mehrere zuständige Instanzen (' . implode(', ', $responsible) . ') - Kachel liegt in mehreren Visualisierungen, keine Übersetzung', 0);
+        }
+
+        return count($responsible) === 1 ? $responsible[0] : 0;
+    }
+
+    // Ermittelt die Übersetzungen neu. Liefert true, wenn sie sich geändert haben
+    // und die Kachel neu gerendert werden sollte.
+    private function RefreshSimpleLocaleLabels(): bool
+    {
+        $texts = [];
+        $id = $this->FindSimpleLocaleInstance();
+        if ($id !== 0) {
+            $texts = array_values(array_unique($this->CollectSimpleLocaleTexts()));
+        }
+
+        $labels = [];
+        if ($texts !== []) {
+            try {
+                $translated = SLOC_TranslateExternalTexts($id, $texts);
+            } catch (Throwable $e) {
+                $translated = $texts;
+            }
+            foreach ($texts as $index => $text) {
+                $translation = (string)($translated[$index] ?? $text);
+                if ($translation !== '' && $translation !== $text) {
+                    $labels[$text] = $translation;
+                }
+            }
+        }
+
+        $json = json_encode($labels);
+        $changed = $json !== $this->GetBuffer('SimpleLocaleLabels');
+        $this->SetBuffer('SimpleLocaleLabels', $json);
+        $this->simpleLocaleLabels = $labels;
+
+        return $changed;
+    }
+
+    private function IsSimpleLocaleInstance(int $id): bool
+    {
+        return in_array($id, $this->GetSimpleLocaleInstanceIDs(), true);
+    }
+
+    // Übersetzung eines Konfigurationstexts, sonst der Text selbst.
+    private function TranslateLabel(string $text): string
+    {
+        if ($text === '') {
+            return $text;
+        }
+        if ($this->simpleLocaleLabels === null) {
+            $labels = json_decode($this->GetBuffer('SimpleLocaleLabels'), true);
+            $this->simpleLocaleLabels = is_array($labels) ? $labels : [];
+        }
+
+        return $this->simpleLocaleLabels[$text] ?? $text;
+    }
+
+    // Alle Raumnamen und alternativen Namen aus der Konfiguration, auch aus den
+    // als JSON gespeicherten Listen (Räume, Menü- und Info-Einträge).
+    private function CollectSimpleLocaleTexts(): array
+    {
+        $texts = [];
+        $walk = function ($node) use (&$walk, &$texts): void {
+            if (!is_array($node)) {
+                return;
+            }
+            foreach ($node as $key => $value) {
+                if (is_string($value)) {
+                    if (is_string($key) && ($key === 'RoomName' || str_ends_with($key, 'AltName'))) {
+                        if (trim($value) !== '') {
+                            $texts[] = $value;
+                        }
+                    } elseif ($value !== '' && ($value[0] === '[' || $value[0] === '{')) {
+                        $walk(json_decode($value, true));
+                    }
+                } elseif (is_array($value)) {
+                    $walk($value);
+                }
+            }
+        };
+        $walk(json_decode((string)@IPS_GetConfiguration($this->InstanceID), true));
+
+        return $texts;
+    }
+
+    // ---------------------------------------------------------------------
     // Property-/Listen-Leser
     // ---------------------------------------------------------------------
 
@@ -245,9 +376,9 @@ trait TileVisuRoomHelpers
                 } catch (Throwable $e) {}
                 try { $valueFormatted = (string)@GetValueFormatted($varId); } catch (Throwable $e) {}
                 if ($showName) {
-                    try { $nameVal = $altName !== '' ? $altName : (string)@IPS_GetName($varId); } catch (Throwable $e) { $nameVal = $altName; }
+                    try { $nameVal = $altName !== '' ? $this->TranslateLabel($altName) : (string)@IPS_GetName($varId); } catch (Throwable $e) { $nameVal = $this->TranslateLabel($altName); }
                 } else {
-                    $nameVal = $altName;
+                    $nameVal = $this->TranslateLabel($altName);
                 }
                 if ($showIcon) {
                     try { $icon = (string)$this->GetIconAdvanced($varId); } catch (Throwable $e) {}
@@ -272,7 +403,7 @@ trait TileVisuRoomHelpers
                     }
                 }
             } else {
-                $nameVal = $altName;
+                $nameVal = $this->TranslateLabel($altName);
             }
 
             if ($nameVal !== '') { $outRoom[$key . 'name'] = $nameVal; }
