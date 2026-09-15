@@ -89,7 +89,8 @@
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
       pointer-events: none;
-      z-index: 10000;
+      /* Höchste Ebene: die RoomTile-Kachel selbst liegt auf 9999999 */
+      z-index: 2147483647;
       /* Liegt dauerhaft als eigene Ebene bereit; Ein-/Ausblenden und Verschieben
          lösen so kein Neuzeichnen der Kachel aus */
       visibility: hidden;
