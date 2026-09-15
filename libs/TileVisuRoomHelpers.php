@@ -81,8 +81,11 @@ trait TileVisuRoomHelpers
         $labels = [];
         if ($texts !== []) {
             try {
-                $translated = SLOC_TranslateExternalTexts($id, $texts);
+                // Symcon-Modulfunktionen kennen keine optionalen Parameter - die
+                // Quellsprache muss immer mit; '' steht für die der Instanz.
+                $translated = SLOC_TranslateExternalTexts($id, $texts, '');
             } catch (Throwable $e) {
+                $this->SendDebug('SimpleLocale', 'Übersetzung fehlgeschlagen: ' . $e->getMessage(), 0);
                 $translated = $texts;
             }
             foreach ($texts as $index => $text) {
