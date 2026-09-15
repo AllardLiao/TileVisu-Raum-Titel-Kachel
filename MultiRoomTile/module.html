@@ -1009,6 +1009,7 @@
                 btn.onclick = () => { if (!consumeDimClick(btn)) requestAction('menuitem:' + it.id, 1); };
               } else {
                 btn.onclick = () => requestAction('menuitem:' + it.id, 1);
+                updateNumericButtonState(btn, it.value);
               }
             }
             if (it.showIcon !== false && roomObj[`${key}icon`]) {
@@ -1508,6 +1509,8 @@
             : (useImgCol ? (dsOff || fb || '') : (colOff || dsOff || fb || roomObj[colorKey] || ''));
           if (!bg && !useImgCol) bg = 'var(--accent-color)';
           btn.style.backgroundColor = bg;
+        } else if (rawVal !== undefined) {
+          updateNumericButtonState(btn, rawVal);
         } else {
           btn.classList.remove('inactive');
         }
@@ -1764,10 +1767,8 @@
             let bg = isOn ? (colOn || fb || '') : (colOff || fb || '');
             if (bg) single.style.backgroundColor = bg;
           }
-          // Dimmer: Füllstand nachführen, außer der Nutzer streicht gerade
-          if (value !== undefined && single.dataset.rangeMin !== undefined && !single.classList.contains('dimming')) {
-            setDimLevel(single, value);
-          }
+          // Zahlen (z.B. Dimmer): aus bei 0 bzw. Minimum, Füllstand nachführen
+          if (value !== undefined) updateNumericButtonState(single, value);
         }
         return;
       }
@@ -2143,6 +2144,8 @@
               const useImgCol2 = !!(root && root.dataset && root.dataset.useimagecolors === '1') || GRID_FLAGS.useImageColorsForButtons;
               if (!bg && !useImgCol2) bg = 'var(--accent-color)';
               single.style.backgroundColor = bg;
+            } else {
+              updateNumericButtonState(single, value);
             }
           }
           return;
