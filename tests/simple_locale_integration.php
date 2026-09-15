@@ -34,7 +34,7 @@ class FakeSimpleLocale extends IPSModuleStrict
         return in_array($ObjectID, self::$responsibleFor[$this->InstanceID] ?? [], true);
     }
 
-    public function TranslateExternalTexts(array $Texts, string $SourceLanguage = ''): array
+    public function TranslateExternalTexts(array $Texts, string $SourceLanguage): array
     {
         return array_map(static fn ($text) => self::$translations[$text] ?? $text, $Texts);
     }
@@ -45,7 +45,8 @@ function SLOC_IsResponsibleFor(int $InstanceID, int $ObjectID): bool
     return IPS\InstanceManager::getInstanceInterface($InstanceID)->IsResponsibleFor($ObjectID);
 }
 
-function SLOC_TranslateExternalTexts(int $InstanceID, array $Texts, string $SourceLanguage = ''): array
+// Wie in Symcon: generierte Modulfunktionen haben keine optionalen Parameter.
+function SLOC_TranslateExternalTexts(int $InstanceID, array $Texts, string $SourceLanguage): array
 {
     return IPS\InstanceManager::getInstanceInterface($InstanceID)->TranslateExternalTexts($Texts, $SourceLanguage);
 }
