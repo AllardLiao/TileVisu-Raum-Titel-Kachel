@@ -207,6 +207,11 @@ final class TileVisuColor
             }
         }
 
+        $c = self::colorFromIntervals($pres, $value, $vt, $mode);
+        if ($c !== null) {
+            return $c;
+        }
+
         $c = self::colorFromTemplate($pres, $value, $valNorm, $vt, $templateGeneralFallback);
         if ($c !== null) {
             return $c;
@@ -266,6 +271,30 @@ final class TileVisuColor
                     return $c;
                 }
             }
+        }
+        return null;
+    }
+
+    // INTERVALS (Werte-Darstellung): Farbe des Intervalls, in dem der Wert liegt
+    private static function colorFromIntervals(array $pres, mixed $value, int $vt, string $mode): ?string
+    {
+        if (($vt !== 1 && $vt !== 2) || !isset($pres['INTERVALS'])) {
+            return null;
+        }
+        if (isset($pres['INTERVALS_ACTIVE']) && !$pres['INTERVALS_ACTIVE']) {
+            return null;
+        }
+        $intervals = self::decodeOptions($pres['INTERVALS']);
+        $current = (float)$value;
+        foreach ($intervals as $interval) {
+            if (!is_array($interval)) continue;
+            $min = array_key_exists('IntervalMinValue', $interval) ? (float)$interval['IntervalMinValue'] : -INF;
+            $max = array_key_exists('IntervalMaxValue', $interval) ? (float)$interval['IntervalMaxValue'] : INF;
+            if ($current < $min || $current > $max) continue;
+            if (array_key_exists('ColorActive', $interval) && !$interval['ColorActive']) {
+                return null;
+            }
+            return self::colorFromEntry($interval, $mode);
         }
         return null;
     }

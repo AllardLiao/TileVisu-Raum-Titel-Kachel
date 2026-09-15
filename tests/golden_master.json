@@ -19,6 +19,11 @@
         "profile_assoc_color": "",
         "profile_assoc_color_minus1": "",
         "custom_color_minus1": "",
+        "adv_intervals_over_icon": "F6F797",
+        "adv_intervals_dark_black": "000000",
+        "adv_intervals_inactive_fallback": "",
+        "adv_intervals_no_match": "",
+        "adv_intervals_disabled": "",
         "missing": ""
     },
     "getProfileColorHex": {
@@ -41,6 +46,11 @@
         "profile_assoc_color": "123123",
         "profile_assoc_color_minus1": "",
         "custom_color_minus1": "",
+        "adv_intervals_over_icon": "F6F797",
+        "adv_intervals_dark_black": "000000",
+        "adv_intervals_inactive_fallback": "",
+        "adv_intervals_no_match": "",
+        "adv_intervals_disabled": "",
         "missing": ""
     },
     "getIcon_varicon": {
@@ -63,6 +73,12 @@
         "adv_options_range": "ArrowUp",
         "adv_profile_icon_fallback": "Gauge",
         "profile_assoc_icon": "ArrowUp",
+        "adv_intervals_over_icon": "cloud-sun",
+        "adv_intervals_dark_black": "moon",
+        "adv_intervals_inactive_fallback": "Sun",
+        "adv_intervals_no_match": "Sun",
+        "adv_intervals_disabled": "Sun",
+        "adv_options_over_icon": "person-walking",
         "zero": "Transparent",
         "missing": "Transparent"
     },
