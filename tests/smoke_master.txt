@@ -1,12 +1,12 @@
 == RoomTile ==
 form.len=59953 form.sha1=3553a75fb7544fea7d9b5e08f9f89f7fa0c0c0a3
-tile.len=143639 tile.sha1=ba758d371942e5d4c675cebb6209943cd2c19c8f
+tile.len=144709 tile.sha1=5ae9edf651d2a3c4738f10d3154f6f73a2a69635
 payload={"grid":{"borderRadius":10,"buttonHeight":25,"useImageColorsForButtons":false,"transparentStatusColors":true,"transparentMenuStatusColors":true,"groupMenuInfoElements":false,"menuTransparency":30},"rooms":[{"idx":0,"infofontsize":14,"infoheight":24,"menufontsize":14,"tilebackgroundcolor":"#000000","infofontcolor":"#FFFFFF","infotopbackgroundcolor":"rgba(0, 0, 0, 0.3)","infotopborderradius":50,"buttonborderradius":10,"menufontcolor":"#FFFFFF","menubackgroundcolor":"rgba(0, 0, 0, 0.3)","switchalignment":"left","switchdistribute":false,"imagetransparency":0.7,"infotopcentered":false,"bgfilterbrightnessmin":0.2,"bgfilterbrightnessmax":1,"bgfiltercontrastmin":0.9,"bgfiltercontrastmax":1,"bgfiltergrayscalemin":0,"bgfiltergrayscalemax":1,"roomname":"","targetlink":0,"targetlinkid":0,"targetlinkvalue":0,"roomnamefontsize":50,"roomnamefontcolor":"#FFFFFF","infomiddleiconsize":56,"infomiddletextsize":20,"infomiddlecolor":"#FFFFFF","menuswitch":true,"useimagecolors":false,"image1":"\/hook\/roomgridimages\/11490?placeholder=1&v=V","image2enabled":false,"bgfilter":50,"bgfade":0,"switch1width":100,"switch1fullwidth":false,"switch2width":100,"switch2fullwidth":false,"switch3width":100,"switch3fullwidth":false,"switch4width":100,"switch4fullwidth":false,"switch5width":100,"switch5fullwidth":false,"switch1altname":"","info1altname":"","switch2altname":"","info2altname":"","switch3altname":"","info3altname":"","switch4altname":"","info4altname":"","switch5altname":"","info5altname":"","infoleftaltname":"","inforightaltname":"","infoleft2altname":"","inforight2altname":""}]}
 log=
 
 == MultiRoomTile ==
 form.len=62300 form.sha1=1db81fd8211a7a6cf71818b7a856b11913dbbcac
-tile.len=135962 tile.sha1=6a31a0cbe4954eb34c814ed5c58295bf2e52ce57
+tile.len=136942 tile.sha1=6c1fbd4ac73944097ee4f0b6ce92752a74d9e2c2
 payload={"grid":{"minWidth":300,"minHeight":220,"gap":12,"borderRadius":10,"useImageColorsForButtons":false,"transparentStatusColors":true,"transparentMenuStatusColors":true,"groupMenuInfoElements":false,"columns":0,"useFullTileHeight":false,"customMargin":-1},"rooms":[]}
 log=
 

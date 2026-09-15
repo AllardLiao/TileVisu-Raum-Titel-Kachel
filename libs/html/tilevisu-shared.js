@@ -337,6 +337,21 @@
       }
     }
 
+    // Ist ein Zahlen-Button "an"? An, sobald der Wert nicht 0 ist.
+    function numericIsOn(btn, value) {
+      const v = Number(value);
+      return isFinite(v) && v !== 0;
+    }
+
+    // An/Aus-Darstellung eines Zahlen-Buttons (Integer/Float) nach einem Wert setzen,
+    // z.B. Dimmer auf 0 = aus. Andere Buttons bleiben unberührt.
+    function updateNumericButtonState(btn, value) {
+      if (!btn || !btn.dataset) return;
+      if (btn.dataset.vartype !== '1' && btn.dataset.vartype !== '2') return;
+      if (btn.classList.contains('object-action')) return;
+      btn.classList.toggle('inactive', !numericIsOn(btn, value));
+    }
+
     function switchButton(prefixId, idx, n) {
       const btn = el('button', { id: prefixId + '-schalter' + n, class: 'hidden switch', onclick: `requestAction('room:${idx}:Schalter${n}', 1);` });
       const icon = el('i', { id: prefixId + '-schalter' + n + 'icon', class: 'hidden switch-icon' });

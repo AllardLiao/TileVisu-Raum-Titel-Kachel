@@ -1234,6 +1234,7 @@
             } else {
               btn.onclick = () => requestAction('menuitem:' + it.id, 1);
             }
+            if (!isObjectAction) updateNumericButtonState(btn, it.value);
             if (it.showIcon !== false && roomObj[`${it.key}icon`]) {
               const cls = prepareIconClass(roomObj[`${it.key}icon`]);
               if (cls) {
@@ -1625,6 +1626,8 @@
             : (useImgCol ? (dsOff || fb || '') : (colOff || dsOff || fb || roomObj[colorKey] || ''));
           if (!bg && !useImgCol) bg = 'var(--accent-color)';
           btn.style.backgroundColor = bg;
+        } else {
+          updateNumericButtonState(btn, rawVal);
         }
         const showNameSingle = (roomObj['schalter' + n + 'showname'] !== undefined)
           ? !!roomObj['schalter' + n + 'showname']
@@ -1984,7 +1987,12 @@
           const btn = document.getElementById(baseId);
           if (btn) {
             const isOn = (value === true || String(value) === '1');
-            btn.classList.toggle('inactive', !isOn);
+            if (btn.dataset.vartype === '1' || btn.dataset.vartype === '2') {
+              // Zahlen (z.B. Dimmer): aus bei 0
+              updateNumericButtonState(btn, value);
+            } else {
+              btn.classList.toggle('inactive', !isOn);
+            }
             // Update stored value in dataset
             btn.dataset.currentValue = String(value);
             // Update visual state if it's a boolean button (only if palette is not applied)
@@ -2302,6 +2310,8 @@
               let bg = isOn ? (colOn || fb || '') : (colOff || fb || '');
               if (!bg) bg = 'var(--accent-color)';
               single.style.backgroundColor = bg;
+            } else {
+              updateNumericButtonState(single, value);
             }
           }
           return;
