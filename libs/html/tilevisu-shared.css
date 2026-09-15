@@ -47,7 +47,13 @@
       z-index: 1;
     }
     /* Dimmer-Buttons: Füllstand zeigt den Wert, Streichen stellt ihn ein */
-    .switch.dimmable { touch-action: pan-y; }
+    /* Kein Markieren von Text und kein Kontextmenü beim Streichen (auch iOS) */
+    .switch.dimmable, .switch.dimmable * {
+      touch-action: pan-y;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
     .switch .dim-fill {
       position: absolute;
       top: 0;
@@ -62,16 +68,23 @@
     }
     .switch.dimming .dim-fill { transition: none; }
     .switch.dimming::after { display: none; }
-    .switch .dim-value {
-      display: none;
-      position: absolute;
-      right: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 0.85em;
+    /* Wert beim Streichen: Blase über dem Button, außerhalb des Buttons, damit
+       sie weder abgeschnitten wird noch den Buttontext überdeckt */
+    .dim-bubble {
+      position: fixed;
+      left: 0;
+      top: 0;
+      padding: 4px 10px;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.2;
+      white-space: nowrap;
       pointer-events: none;
+      z-index: 10000;
     }
-    .switch.dimming .dim-value { display: inline; }
     .switch-group { display: flex; gap: 1px; align-items: center; }
     .switch-option {
       display: inline-flex;
