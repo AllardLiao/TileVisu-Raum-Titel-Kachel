@@ -368,7 +368,29 @@
         btn.insertBefore(fill, btn.firstChild);
       }
       fill.style.width = (dimFraction(btn, value) * 100) + '%';
-      btn.classList.toggle('inactive', !(Number(value) > Number(btn.dataset.rangeMin)));
+      btn.classList.toggle('inactive', !numericIsOn(btn, value));
+    }
+
+    // Ist ein Zahlen-Button "an"? Mit Wertebereich: Wert über dem Minimum,
+    // ohne Wertebereich: Wert ungleich 0.
+    function numericIsOn(btn, value) {
+      const v = Number(value);
+      if (!isFinite(v)) return false;
+      if (btn && btn.dataset.rangeMin !== undefined) return v > Number(btn.dataset.rangeMin);
+      return v !== 0;
+    }
+
+    // An/Aus-Darstellung eines Zahlen-Buttons (Integer/Float) nach einem Wert setzen.
+    // Andere Buttons bleiben unberührt.
+    function updateNumericButtonState(btn, value) {
+      if (!btn || !btn.dataset) return;
+      if (btn.dataset.vartype !== '1' && btn.dataset.vartype !== '2') return;
+      if (btn.classList.contains('object-action')) return;
+      if (btn.dataset.rangeMin !== undefined) {
+        if (!btn.classList.contains('dimming')) setDimLevel(btn, value);
+        return;
+      }
+      btn.classList.toggle('inactive', !numericIsOn(btn, value));
     }
 
     // Wurde gerade gestrichen? Dann gehört der folgende Klick zur Streichbewegung.
