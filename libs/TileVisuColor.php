@@ -57,6 +57,20 @@ final class TileVisuColor
                 return $c;
             }
         }
+        // Aufgelöste Darstellung: enthält die Werte einer Vorlage (z.B. Intervalle),
+        // die in der eigenen Darstellung nur als TEMPLATE-Verweis stehen.
+        if (function_exists('IPS_GetVariablePresentation')) {
+            try {
+                $resolved = @IPS_GetVariablePresentation($id);
+                if (is_array($resolved) && !empty($resolved) && (string)($resolved['PROFILE'] ?? '') === '') {
+                    $c = self::resolvePresentationColor($resolved, $value, $vt, 'numeric', false);
+                    if ($c !== null) {
+                        return $c;
+                    }
+                }
+            } catch (\Throwable $e) {
+            }
+        }
         if (isset($variable['VariablePresentation']) && is_array($variable['VariablePresentation'])) {
             $c = self::resolvePresentationColor($variable['VariablePresentation'], $value, $vt, 'int', true);
             if ($c !== null) {
