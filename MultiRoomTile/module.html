@@ -1003,7 +1003,13 @@
               };
             } else {
               if (!useImgCol && it.color) btn.style.backgroundColor = it.color;
-              btn.onclick = () => requestAction('menuitem:' + it.id, 1);
+              if (it.range) {
+                // Dimmer: Tippen schaltet um, Streichen stellt einen Wert ein
+                bindSwipeDimmer(btn, 'menuitemset:' + it.id, it.range, it.type, it.value);
+                btn.onclick = () => { if (!consumeDimClick(btn)) requestAction('menuitem:' + it.id, 1); };
+              } else {
+                btn.onclick = () => requestAction('menuitem:' + it.id, 1);
+              }
             }
             if (it.showIcon !== false && roomObj[`${key}icon`]) {
               const cls = prepareIconClass(roomObj[`${key}icon`]);
@@ -1757,6 +1763,10 @@
             const fb = single.dataset ? single.dataset.fallbackcolor : undefined;
             let bg = isOn ? (colOn || fb || '') : (colOff || fb || '');
             if (bg) single.style.backgroundColor = bg;
+          }
+          // Dimmer: Füllstand nachführen, außer der Nutzer streicht gerade
+          if (value !== undefined && single.dataset.rangeMin !== undefined && !single.classList.contains('dimming')) {
+            setDimLevel(single, value);
           }
         }
         return;

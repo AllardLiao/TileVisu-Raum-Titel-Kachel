@@ -46,6 +46,32 @@
       pointer-events: none;
       z-index: 1;
     }
+    /* Dimmer-Buttons: Füllstand zeigt den Wert, Streichen stellt ihn ein */
+    .switch.dimmable { touch-action: pan-y; }
+    .switch .dim-fill {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      /* Textfarbe des Buttons: hebt sich auf hellen wie dunklen Designs ab */
+      background: currentColor;
+      opacity: 0.25;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .switch.dimming .dim-fill { transition: none; }
+    .switch.dimming::after { display: none; }
+    .switch .dim-value {
+      display: none;
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.85em;
+      pointer-events: none;
+    }
+    .switch.dimming .dim-value { display: inline; }
     .switch-group { display: flex; gap: 1px; align-items: center; }
     .switch-option {
       display: inline-flex;

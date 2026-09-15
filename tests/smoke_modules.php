@@ -256,3 +256,56 @@ assertSameValue('roomtile_trigger_keeps_sent_value', 1, $triggerAfterClick);
 assertSameValue('roomtile_room_switch_toggles_dimmer', 0, $roomSwitchAfterClick);
 assertSameValue('multiroom_dimmer_switches_on_to_max', 100, $multiDimmerAfterClick);
 assertSameValue('multiroom_room_switch_toggles_dimmer', 0, $multiRoomSwitchAfterClick);
+
+// ---------------------------------------------------------------------------
+// Dimmer-Buttons: Wertebereich im Payload, Streichen setzt einen genauen Wert
+// (menuitemset:<Id>), begrenzt auf den Bereich und gerundet auf die Schrittweite.
+// ---------------------------------------------------------------------------
+
+IPS_CreateVariableProfile('TileVisuTest.Dimmer5', 1);
+IPS_SetVariableProfileValues('TileVisuTest.Dimmer5', 0, 100, 5);
+$stepDimmer = IPS_CreateVariable(1);
+IPS_SetVariableCustomProfile($stepDimmer, 'TileVisuTest.Dimmer5');
+IPS_SetVariableCustomAction($stepDimmer, $setValueScript);
+SetValue($stepDimmer, 0);
+
+$swipeMenuItems = $numericMenuItems;
+$swipeMenuItems[] = [
+    'Id' => 'ms', 'VariableId' => $stepDimmer, 'OpenObjectId' => 0, 'SceneControlId' => 0,
+    'ShowName' => true, 'ShowIcon' => true, 'ShowValue' => false,
+    'UseVarColor' => false, 'ColorTrue' => -1, 'ColorFalse' => -1,
+    'AltName' => '', 'Width' => 100, 'FullWidth' => false,
+];
+
+ob_start();
+$rt->SetProperty('MenuItems', json_encode($swipeMenuItems));
+$rt->ApplyChanges();
+$swipeTile = (string)$rt->GetVisualizationTile();
+$rt->RequestAction('menuitemset:md', 63);
+$dimmerAfterSwipe = GetValue($dimmer);
+$rt->RequestAction('menuitemset:md', 250);
+$dimmerAfterOverflow = GetValue($dimmer);
+$rt->RequestAction('menuitemset:ms', 42);
+$stepDimmerAfterSwipe = GetValue($stepDimmer);
+$rt->RequestAction('menuitemset:mf', 0.5);
+$floatAfterSwipe = GetValue($floatDimmer);
+
+$mr->SetProperty('Rooms', json_encode([['RoomName' => 'Bad', 'MenuItems' => $swipeMenuItems]]));
+$mr->ApplyChanges();
+$mr->RequestAction('menuitemset:md', 27);
+$multiDimmerAfterSwipe = GetValue($dimmer);
+ob_end_clean();
+
+$swipeItems = [];
+foreach ((json_decode(payloadOf($swipeTile), true)['rooms'][0]['menuitems'] ?? []) as $item) {
+    $swipeItems[$item['id']] = $item;
+}
+
+echo "\n== Dimmer streichen ==\n";
+assertSameValue('roomtile_dimmer_payload_has_range', ['min' => 0, 'max' => 100, 'step' => 1], $swipeItems['md']['range'] ?? null);
+assertSameValue('roomtile_trigger_payload_without_range', false, array_key_exists('range', $swipeItems['mt'] ?? []));
+assertSameValue('roomtile_swipe_sets_exact_value', 63, $dimmerAfterSwipe);
+assertSameValue('roomtile_swipe_clamps_to_max', 100, $dimmerAfterOverflow);
+assertSameValue('roomtile_swipe_rounds_to_step', 40, $stepDimmerAfterSwipe);
+assertSameValue('roomtile_swipe_float_slider', 0.5, $floatAfterSwipe);
+assertSameValue('multiroom_swipe_sets_exact_value', 27, $multiDimmerAfterSwipe);
