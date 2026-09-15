@@ -393,6 +393,40 @@
       btn.classList.toggle('inactive', !numericIsOn(btn, value));
     }
 
+    // Wertanzeige beim Streichen: eine gemeinsame Blase, direkt im body, damit
+    // "overflow: hidden" von Button und Kachel sie nicht abschneidet.
+    const DIM_BUBBLE_GAP_PX = 8;
+    const DIM_BUBBLE_MARGIN_PX = 4;
+
+    function showDimBubble(btn, clientX, text) {
+      let bubble = document.getElementById('tilevisu-dim-bubble');
+      if (!bubble) {
+        bubble = document.createElement('div');
+        bubble.id = 'tilevisu-dim-bubble';
+        bubble.className = 'dim-bubble';
+        document.body.appendChild(bubble);
+      }
+      bubble.textContent = text;
+      bubble.hidden = false;
+      const rect = btn.getBoundingClientRect();
+      const w = bubble.offsetWidth;
+      const h = bubble.offsetHeight;
+      const viewW = document.documentElement.clientWidth || window.innerWidth;
+      const viewH = document.documentElement.clientHeight || window.innerHeight;
+      // Über dem Finger, innerhalb des sichtbaren Bereichs
+      const left = Math.max(DIM_BUBBLE_MARGIN_PX, Math.min(viewW - w - DIM_BUBBLE_MARGIN_PX, clientX - w / 2));
+      // Oberhalb des Buttons; ist dort kein Platz, darunter
+      let top = rect.top - h - DIM_BUBBLE_GAP_PX;
+      if (top < DIM_BUBBLE_MARGIN_PX) top = Math.min(rect.bottom + DIM_BUBBLE_GAP_PX, viewH - h - DIM_BUBBLE_MARGIN_PX);
+      bubble.style.left = left + 'px';
+      bubble.style.top = top + 'px';
+    }
+
+    function hideDimBubble() {
+      const bubble = document.getElementById('tilevisu-dim-bubble');
+      if (bubble) bubble.hidden = true;
+    }
+
     // Wurde gerade gestrichen? Dann gehört der folgende Klick zur Streichbewegung.
     function consumeDimClick(btn) {
       return (Date.now() - Number(btn.dataset.dimDragEndedAt || 0)) < DIM_CLICK_SUPPRESS_MS;
@@ -407,10 +441,9 @@
       btn.dataset.rangeMax = String(max);
       btn.classList.add('dimmable');
       setDimLevel(btn, currentValue);
-
-      const label = document.createElement('span');
-      label.className = 'dim-value';
-      btn.appendChild(label);
+      // Streichen soll keinen Text markieren
+      btn.addEventListener('selectstart', (e) => e.preventDefault());
+      btn.addEventListener('contextmenu', (e) => e.preventDefault());
 
       let pointerId = null;
       let startX = 0;
@@ -448,10 +481,11 @@
           dragging = true;
           btn.classList.add('dimming');
           try { btn.setPointerCapture(e.pointerId); } catch (err) {}
+          try { const sel = window.getSelection && window.getSelection(); if (sel) sel.removeAllRanges(); } catch (err) {}
         }
         pending = valueAt(e.clientX);
         setDimLevel(btn, pending);
-        label.textContent = Math.round(dimFraction(btn, pending) * 100) + ' %';
+        showDimBubble(btn, e.clientX, Math.round(dimFraction(btn, pending) * 100) + ' %');
         e.preventDefault();
       });
 
@@ -461,6 +495,7 @@
         if (!dragging) return;
         dragging = false;
         btn.classList.remove('dimming');
+        hideDimBubble();
         btn.dataset.dimDragEndedAt = String(Date.now());
         if (commit && pending !== null) {
           btn.dataset.currentValue = String(pending);
