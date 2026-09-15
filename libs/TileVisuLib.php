@@ -27,6 +27,12 @@ class TileVisuLib
         return TileVisuColor::getPresentationColorHex($id);
     }
 
+    // Button colors for a boolean variable: ['on' => '#RRGGBB'|'', 'off' => '#RRGGBB'|'']
+    public static function getSwitchColors(int $id): array
+    {
+        return TileVisuColor::getSwitchColors($id);
+    }
+
     // Convert RGB int + alpha to css rgba()
     public static function rgbaFromHexAlpha(int $hexcolor, float $alpha): string
     {

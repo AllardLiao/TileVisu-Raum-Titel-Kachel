@@ -66,6 +66,82 @@ final class TileVisuColor
         return '';
     }
 
+    /**
+     * Farben eines Ein/Aus-Buttons für true und false, so wie die Symcon-Visualisierung
+     * sie zeigt: ['on' => '#RRGGBB'|'', 'off' => '#RRGGBB'|''].
+     *
+     * Maßgeblich ist die wirksame Darstellung der Variable. Hat sie eine
+     * Symcon-8-Darstellung (z.B. Schalter), zählen nur deren Farben - ein daneben
+     * noch eingetragenes Profil wie ~Switch (An = grün) bleibt unberücksichtigt.
+     * Nur eine Legacy-Darstellung (mit PROFILE) oder gar keine Darstellung liest
+     * die Farben aus den Profil-Assoziationen.
+     */
+    public static function getSwitchColors(int $id): array
+    {
+        $colors = ['on' => '', 'off' => ''];
+        if (!function_exists('IPS_VariableExists') || !IPS_VariableExists($id)) {
+            return $colors;
+        }
+        $variable = IPS_GetVariable($id);
+        if (($variable['VariableType'] ?? null) !== 0) {
+            return $colors;
+        }
+
+        $pres = self::getEffectivePresentation($id, $variable);
+        $profile = (string)($pres['PROFILE'] ?? '');
+        if (!empty($pres) && $profile === '') {
+            foreach (['on' => true, 'off' => false] as $key => $value) {
+                $c = self::resolvePresentationColor($pres, $value, 0, 'numeric', true);
+                if ($c !== null && $c !== '') {
+                    $colors[$key] = '#' . $c;
+                }
+            }
+            return $colors;
+        }
+
+        if ($profile === '') {
+            $profile = (string)(($variable['VariableCustomProfile'] ?? '') ?: ($variable['VariableProfile'] ?? ''));
+        }
+        if ($profile !== '' && IPS_VariableProfileExists($profile)) {
+            $p = IPS_GetVariableProfile($profile);
+            foreach (($p['Associations'] ?? []) as $a) {
+                if (!is_array($a) || !isset($a['Value'], $a['Color']) || (int)$a['Color'] === -1) {
+                    continue;
+                }
+                $hex = '#' . sprintf('%06X', (int)$a['Color']);
+                if ($a['Value'] == 1 || $a['Value'] === true) {
+                    $colors['on'] = $hex;
+                } elseif ($a['Value'] == 0 || $a['Value'] === false) {
+                    $colors['off'] = $hex;
+                }
+            }
+        }
+        return $colors;
+    }
+
+    /**
+     * Wirksame Darstellung: IPS_GetVariablePresentation (löst eigene Darstellung
+     * und Vorlagen auf), sonst die eigene bzw. die Standard-Darstellung der Variable.
+     */
+    private static function getEffectivePresentation(int $id, array $variable): array
+    {
+        if (function_exists('IPS_GetVariablePresentation')) {
+            try {
+                $resolved = @IPS_GetVariablePresentation($id);
+                if (is_array($resolved) && !empty($resolved)) {
+                    return $resolved;
+                }
+            } catch (\Throwable $e) {
+            }
+        }
+        foreach (['VariableCustomPresentation', 'VariablePresentation'] as $key) {
+            if (!empty($variable[$key]) && is_array($variable[$key])) {
+                return $variable[$key];
+            }
+        }
+        return [];
+    }
+
     // Convert RGB int + alpha to css rgba()
     public static function rgbaFromHexAlpha(int $hexcolor, float $alpha): string
     {

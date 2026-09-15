@@ -135,41 +135,7 @@ trait TileVisuRoomHelpers
 
     private function GetButtonColors(int $id): array
     {
-        $colors = ['on' => '', 'off' => ''];
-        if (!function_exists('IPS_VariableExists') || !IPS_VariableExists($id)) {
-            return $colors;
-        }
-        $variable = IPS_GetVariable($id);
-        if (!isset($variable['VariableType']) || $variable['VariableType'] !== 0) {
-            return $colors;
-        }
-        $profile = $variable['VariableCustomProfile'] ?: $variable['VariableProfile'];
-        if ($profile && IPS_VariableProfileExists($profile)) {
-            $p = IPS_GetVariableProfile($profile);
-            if (isset($p['Associations']) && is_array($p['Associations'])) {
-                foreach ($p['Associations'] as $a) {
-                    if (isset($a['Value'], $a['Color']) && $a['Color'] !== -1) {
-                        $hex = '#' . sprintf('%06X', (int)$a['Color']);
-                        if ($a['Value'] == 1 || $a['Value'] === true) {
-                            $colors['on'] = $hex;
-                        } elseif ($a['Value'] == 0 || $a['Value'] === false) {
-                            $colors['off'] = $hex;
-                        }
-                    }
-                }
-            }
-        }
-        if (isset($variable['VariableCustomPresentation']) && is_array($variable['VariableCustomPresentation'])) {
-            $pres = $variable['VariableCustomPresentation'];
-            $useFalse = $pres['USE_COLOR_FALSE'] ?? true;
-            if (isset($pres['COLOR_TRUE']) && is_int($pres['COLOR_TRUE']) && $pres['COLOR_TRUE'] !== -1) {
-                $colors['on'] = '#' . sprintf('%06X', (int)$pres['COLOR_TRUE']);
-            }
-            if ($useFalse && isset($pres['COLOR_FALSE']) && is_int($pres['COLOR_FALSE']) && $pres['COLOR_FALSE'] !== -1) {
-                $colors['off'] = '#' . sprintf('%06X', (int)$pres['COLOR_FALSE']);
-            }
-        }
-        return $colors;
+        return TileVisuLib::getSwitchColors($id);
     }
 
     private function CheckAndGetValueFormattedFromId(int $id): string|false
