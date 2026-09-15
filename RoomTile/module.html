@@ -1626,8 +1626,6 @@
             : (useImgCol ? (dsOff || fb || '') : (colOff || dsOff || fb || roomObj[colorKey] || ''));
           if (!bg && !useImgCol) bg = 'var(--accent-color)';
           btn.style.backgroundColor = bg;
-        } else {
-          updateNumericButtonState(btn, rawVal);
         }
         const showNameSingle = (roomObj['schalter' + n + 'showname'] !== undefined)
           ? !!roomObj['schalter' + n + 'showname']
@@ -2310,8 +2308,6 @@
               let bg = isOn ? (colOn || fb || '') : (colOff || fb || '');
               if (!bg) bg = 'var(--accent-color)';
               single.style.backgroundColor = bg;
-            } else {
-              updateNumericButtonState(single, value);
             }
           }
           return;
