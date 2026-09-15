@@ -77,8 +77,9 @@ class TileVisuLib
     }
 
     /**
-     * Wertebereich einer Zahlenvariable als ['min' => float, 'max' => float],
-     * oder null, wenn es keinen gibt.
+     * Wertebereich einer Zahlenvariable als ['min' => float, 'max' => float,
+     * 'step' => float], oder null, wenn es keinen gibt. 'step' ist 0, wenn keine
+     * Schrittweite hinterlegt ist.
      *
      * Einen Bereich hat eine Variable mit Schieberegler-Darstellung oder mit einem
      * Profil, dessen Minimum kleiner als das Maximum ist (z.B. ein Dimmer 0-100 %).
@@ -113,7 +114,8 @@ class TileVisuLib
         if ($presentationGuid !== '' && strcasecmp($presentationGuid, trim($sliderGuid, '{} ')) === 0) {
             $min = (float)($presentation['MIN'] ?? 0);
             $max = (float)($presentation['MAX'] ?? 100);
-            return $min < $max ? ['min' => $min, 'max' => $max] : null;
+            $step = (float)($presentation['STEP_SIZE'] ?? 0);
+            return $min < $max ? ['min' => $min, 'max' => $max, 'step' => max(0.0, $step)] : null;
         }
 
         $profile = (string)($presentation['PROFILE'] ?? '');
@@ -125,7 +127,7 @@ class TileVisuLib
             $min = (float)($p['MinValue'] ?? 0);
             $max = (float)($p['MaxValue'] ?? 0);
             if ($min < $max) {
-                return ['min' => $min, 'max' => $max];
+                return ['min' => $min, 'max' => $max, 'step' => max(0.0, (float)($p['StepSize'] ?? 0))];
             }
         }
 

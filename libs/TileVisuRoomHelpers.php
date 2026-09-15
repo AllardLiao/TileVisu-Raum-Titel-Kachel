@@ -157,6 +157,26 @@ trait TileVisuRoomHelpers
         return $vType === 1 ? (int)round($target) : (float)$target;
     }
 
+    /**
+     * Zielwert, wenn über einen Dimmer-Button gestrichen wurde: der übergebene
+     * Wert, begrenzt auf den Wertebereich und gerundet auf dessen Schrittweite.
+     */
+    private function ResolveNumericSetValue(int $varId, int $vType, mixed $Value): int|float
+    {
+        $target = is_numeric($Value) ? (float)$Value : 0.0;
+        $range = TileVisuLib::getNumericRange($varId);
+        if ($range !== null) {
+            $target = max($range['min'], min($range['max'], $target));
+            $step = (float)($range['step'] ?? 0);
+            if ($step > 0) {
+                $target = $range['min'] + round(($target - $range['min']) / $step) * $step;
+                $target = max($range['min'], min($range['max'], $target));
+            }
+        }
+
+        return $vType === 1 ? (int)round($target) : $target;
+    }
+
     private function GetButtonColors(int $id): array
     {
         $colors = ['on' => '', 'off' => ''];

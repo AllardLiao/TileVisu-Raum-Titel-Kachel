@@ -397,6 +397,14 @@ class RoomTile extends IPSModuleStrict
                 'useVarColor' => $useVarColor,
                 'statusBgColor' => $statusBgColor,
             ];
+            // Wertebereich für Dimmer-Buttons: Streichen über den Button stellt einen Wert ein.
+            // Nur mitgeschickt, wenn es einen gibt.
+            if ($hasValidAction && ($typeVal === 1 || $typeVal === 2) && empty($options)) {
+                $range = TileVisuLib::getNumericRange($varId);
+                if ($range !== null) {
+                    $items[count($items) - 1]['range'] = $range;
+                }
+            }
         }
         usort($items, function ($a, $b) { return ($a['order'] <=> $b['order']); });
         return $items;
@@ -910,6 +918,12 @@ class RoomTile extends IPSModuleStrict
     public function RequestAction(string $Ident, mixed $Value): void
     {
         // Dynamic menu item action: menuitem:<Id>
+        // menuitemset:<Id> - genauen Wert setzen (Streichen über einen Dimmer-Button),
+        // statt wie beim Tippen umzuschalten
+        $setExactValue = strpos($Ident, 'menuitemset:') === 0;
+        if ($setExactValue) {
+            $Ident = 'menuitem:' . substr($Ident, strlen('menuitemset:'));
+        }
         if (strpos($Ident, 'menuitem:') === 0) {
             $itemId = substr($Ident, strlen('menuitem:'));
             $menuList = @json_decode($this->ReadPropertyString('MenuItems'), true);
@@ -960,7 +974,7 @@ class RoomTile extends IPSModuleStrict
                 if (!$hasValidAction) return;
 
                 if ($vType === 0) { $newValue = ($Value === null) ? !@GetValue($varId) : (bool)$Value; }
-                elseif ($vType === 1 || $vType === 2) { $newValue = $this->ResolveNumericSwitchValue($varId, $vType, $Value); }
+                elseif ($vType === 1 || $vType === 2) { $newValue = $setExactValue ? $this->ResolveNumericSetValue($varId, $vType, $Value) : $this->ResolveNumericSwitchValue($varId, $vType, $Value); }
                 else { $newValue = (string)$Value; }
                 @RequestAction($varId, $newValue);
                 $this->sendMenuItemDelta($itemId, $varId);

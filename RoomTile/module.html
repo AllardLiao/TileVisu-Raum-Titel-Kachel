@@ -1231,6 +1231,10 @@
                 const newVal = !currentVal;
                 requestAction('menuitem:' + it.id, newVal);
               };
+            } else if (it.range && !isObjectAction) {
+              // Dimmer: Tippen schaltet um, Streichen stellt einen Wert ein
+              bindSwipeDimmer(btn, 'menuitemset:' + it.id, it.range, it.type, it.value);
+              btn.onclick = () => { if (!consumeDimClick(btn)) requestAction('menuitem:' + it.id, 1); };
             } else {
               btn.onclick = () => requestAction('menuitem:' + it.id, 1);
             }
@@ -1987,6 +1991,10 @@
             btn.classList.toggle('inactive', !isOn);
             // Update stored value in dataset
             btn.dataset.currentValue = String(value);
+            // Dimmer: Füllstand nachführen, außer der Nutzer streicht gerade
+            if (btn.dataset.rangeMin !== undefined && !btn.classList.contains('dimming')) {
+              setDimLevel(btn, value);
+            }
             // Update visual state if it's a boolean button (only if palette is not applied)
             // If button has palette color (check if background is not from dataset), don't override
             const hasDatasetColor = btn.dataset && (btn.dataset.colorOn || btn.dataset.colorOff || btn.dataset.fallbackcolor);

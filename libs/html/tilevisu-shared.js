@@ -337,6 +337,122 @@
       }
     }
 
+    // -----------------------------------------------------------------------
+    // Dimmer-Buttons (Zahlenvariable mit Wertebereich)
+    //
+    // Tippen schaltet wie bisher um (aus / an auf Maximum, entschieden in PHP).
+    // Streichen stellt einen Wert ein: die Fingerposition auf dem Button ist der
+    // Wert, links das Minimum, rechts das Maximum. Am Rand rastet der Wert auf
+    // Minimum bzw. Maximum ein. Gesendet wird erst beim Loslassen - ein Befehl
+    // statt vieler Zwischenwerte, schonend für Funk-Aktoren.
+    // -----------------------------------------------------------------------
+    const DIM_DRAG_THRESHOLD_PX = 10;
+    const DIM_EDGE_SNAP = 0.06;
+    const DIM_CLICK_SUPPRESS_MS = 500;
+
+    function dimFraction(btn, value) {
+      const min = Number(btn.dataset.rangeMin);
+      const max = Number(btn.dataset.rangeMax);
+      const v = Number(value);
+      if (!isFinite(min) || !isFinite(max) || max <= min || !isFinite(v)) return 0;
+      return Math.max(0, Math.min(1, (v - min) / (max - min)));
+    }
+
+    // Füllstand und Aktiv-Zustand eines Dimmer-Buttons nach einem Wert setzen.
+    function setDimLevel(btn, value) {
+      if (!btn || btn.dataset.rangeMin === undefined) return;
+      let fill = btn.querySelector(':scope > .dim-fill');
+      if (!fill) {
+        fill = document.createElement('span');
+        fill.className = 'dim-fill';
+        btn.insertBefore(fill, btn.firstChild);
+      }
+      fill.style.width = (dimFraction(btn, value) * 100) + '%';
+      btn.classList.toggle('inactive', !(Number(value) > Number(btn.dataset.rangeMin)));
+    }
+
+    // Wurde gerade gestrichen? Dann gehört der folgende Klick zur Streichbewegung.
+    function consumeDimClick(btn) {
+      return (Date.now() - Number(btn.dataset.dimDragEndedAt || 0)) < DIM_CLICK_SUPPRESS_MS;
+    }
+
+    function bindSwipeDimmer(btn, actionIdent, range, varType, currentValue) {
+      const min = Number(range.min);
+      const max = Number(range.max);
+      const step = Number(range.step) || 0;
+      if (!isFinite(min) || !isFinite(max) || max <= min) return;
+      btn.dataset.rangeMin = String(min);
+      btn.dataset.rangeMax = String(max);
+      btn.classList.add('dimmable');
+      setDimLevel(btn, currentValue);
+
+      const label = document.createElement('span');
+      label.className = 'dim-value';
+      btn.appendChild(label);
+
+      let pointerId = null;
+      let startX = 0;
+      let startY = 0;
+      let dragging = false;
+      let pending = null;
+
+      const valueAt = (clientX) => {
+        const rect = btn.getBoundingClientRect();
+        let fraction = rect.width > 0 ? (clientX - rect.left) / rect.width : 0;
+        fraction = Math.max(0, Math.min(1, fraction));
+        if (fraction <= DIM_EDGE_SNAP) fraction = 0;
+        if (fraction >= 1 - DIM_EDGE_SNAP) fraction = 1;
+        let value = min + fraction * (max - min);
+        if (step > 0) value = min + Math.round((value - min) / step) * step;
+        value = Math.max(min, Math.min(max, value));
+        return varType === 1 ? Math.round(value) : Math.round(value * 1000) / 1000;
+      };
+
+      btn.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        pointerId = e.pointerId;
+        startX = e.clientX;
+        startY = e.clientY;
+        dragging = false;
+        pending = null;
+      });
+
+      btn.addEventListener('pointermove', (e) => {
+        if (e.pointerId !== pointerId) return;
+        if (!dragging) {
+          const dx = Math.abs(e.clientX - startX);
+          const dy = Math.abs(e.clientY - startY);
+          if (dx < DIM_DRAG_THRESHOLD_PX || dx < dy) return;
+          dragging = true;
+          btn.classList.add('dimming');
+          try { btn.setPointerCapture(e.pointerId); } catch (err) {}
+        }
+        pending = valueAt(e.clientX);
+        setDimLevel(btn, pending);
+        label.textContent = Math.round(dimFraction(btn, pending) * 100) + ' %';
+        e.preventDefault();
+      });
+
+      const finish = (e, commit) => {
+        if (e.pointerId !== pointerId) return;
+        pointerId = null;
+        if (!dragging) return;
+        dragging = false;
+        btn.classList.remove('dimming');
+        btn.dataset.dimDragEndedAt = String(Date.now());
+        if (commit && pending !== null) {
+          btn.dataset.currentValue = String(pending);
+          setDimLevel(btn, pending);
+          requestAction(actionIdent, pending);
+        } else {
+          setDimLevel(btn, btn.dataset.currentValue);
+        }
+        pending = null;
+      };
+      btn.addEventListener('pointerup', (e) => finish(e, true));
+      btn.addEventListener('pointercancel', (e) => finish(e, false));
+    }
+
     function switchButton(prefixId, idx, n) {
       const btn = el('button', { id: prefixId + '-schalter' + n, class: 'hidden switch', onclick: `requestAction('room:${idx}:Schalter${n}', 1);` });
       const icon = el('i', { id: prefixId + '-schalter' + n + 'icon', class: 'hidden switch-icon' });
