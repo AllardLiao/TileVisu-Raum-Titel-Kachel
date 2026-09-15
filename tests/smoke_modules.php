@@ -309,3 +309,64 @@ assertSameValue('roomtile_swipe_clamps_to_max', 100, $dimmerAfterOverflow);
 assertSameValue('roomtile_swipe_rounds_to_step', 40, $stepDimmerAfterSwipe);
 assertSameValue('roomtile_swipe_float_slider', 0.5, $floatAfterSwipe);
 assertSameValue('multiroom_swipe_sets_exact_value', 27, $multiDimmerAfterSwipe);
+
+// ---------------------------------------------------------------------------
+// Button-Farben wie in der Symcon-Visualisierung: Eine Symcon-8-Darstellung
+// hat Vorrang vor einem daneben eingetragenen Profil (~Switch: An = grün).
+// ---------------------------------------------------------------------------
+
+IPS_CreateVariableProfile('TileVisuTest.Switch', 0);
+IPS_SetVariableProfileAssociation('TileVisuTest.Switch', false, 'Aus', '', -1);
+IPS_SetVariableProfileAssociation('TileVisuTest.Switch', true, 'An', '', 0x00FF00);
+
+// Schalter-Darstellung ohne eigene Farben, Profil mit Grün daneben
+$switchNoColor = IPS_CreateVariable(0);
+IPS_SetVariableCustomProfile($switchNoColor, 'TileVisuTest.Switch');
+IPS_SetVariableCustomPresentation($switchNoColor, ['PRESENTATION' => VARIABLE_PRESENTATION_SWITCH, 'ICON_TRUE' => 'power-off']);
+SetValue($switchNoColor, true);
+
+// Schalter-Darstellung mit eigenen Farben
+$switchColored = IPS_CreateVariable(0);
+IPS_SetVariableCustomPresentation($switchColored, ['PRESENTATION' => VARIABLE_PRESENTATION_SWITCH, 'COLOR_TRUE' => 0x5ECBAC, 'COLOR_FALSE' => 0x222222]);
+SetValue($switchColored, false);
+
+// Legacy-Darstellung: Profilfarben gelten weiter
+$switchLegacy = IPS_CreateVariable(0);
+IPS_SetVariableCustomProfile($switchLegacy, 'TileVisuTest.Switch');
+SetValue($switchLegacy, true);
+
+$colorMenuItems = [];
+foreach (['cn' => $switchNoColor, 'cc' => $switchColored, 'cl' => $switchLegacy] as $itemId => $varId) {
+    $colorMenuItems[] = [
+        'Id' => $itemId, 'VariableId' => $varId, 'OpenObjectId' => 0, 'SceneControlId' => 0,
+        'ShowName' => true, 'ShowIcon' => true, 'ShowValue' => false,
+        'UseVarColor' => false, 'ColorTrue' => -1, 'ColorFalse' => -1,
+        'AltName' => '', 'Width' => 100, 'FullWidth' => false,
+    ];
+}
+
+ob_start();
+$rt->SetProperty('MenuItems', json_encode($colorMenuItems));
+$rt->ApplyChanges();
+$colorTile = (string)$rt->GetVisualizationTile();
+$mr->SetProperty('Rooms', json_encode([['RoomName' => 'Flur', 'MenuItems' => $colorMenuItems]]));
+$mr->ApplyChanges();
+$multiColorTile = (string)$mr->GetVisualizationTile();
+ob_end_clean();
+
+$colorsOf = function (string $tile): array {
+    $out = [];
+    foreach ((json_decode(payloadOf($tile), true)['rooms'][0]['menuitems'] ?? []) as $item) {
+        $out[$item['id']] = [$item['colorOn'] ?? null, $item['colorOff'] ?? null];
+    }
+    return $out;
+};
+$roomColors = $colorsOf($colorTile);
+$multiColors = $colorsOf($multiColorTile);
+
+echo "\n== Button-Farben ==\n";
+assertSameValue('switch_presentation_ignores_profile_colors', ['', ''], $roomColors['cn'] ?? null);
+assertSameValue('switch_presentation_uses_own_colors', ['#5ECBAC', '#222222'], $roomColors['cc'] ?? null);
+assertSameValue('legacy_presentation_uses_profile_colors', ['#00FF00', ''], $roomColors['cl'] ?? null);
+assertSameValue('multiroom_switch_presentation_ignores_profile_colors', ['', ''], $multiColors['cn'] ?? null);
+assertSameValue('multiroom_legacy_presentation_uses_profile_colors', ['#00FF00', ''], $multiColors['cl'] ?? null);
