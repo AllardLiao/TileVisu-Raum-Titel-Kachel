@@ -77,6 +77,62 @@ class TileVisuLib
     }
 
     /**
+     * Wertebereich einer Zahlenvariable als ['min' => float, 'max' => float],
+     * oder null, wenn es keinen gibt.
+     *
+     * Einen Bereich hat eine Variable mit Schieberegler-Darstellung oder mit einem
+     * Profil, dessen Minimum kleiner als das Maximum ist (z.B. ein Dimmer 0-100 %).
+     * Variablen mit Auswahloptionen gelten bewusst als "ohne Bereich" - für sie
+     * schickt die Kachel den gewählten Wert selbst.
+     */
+    public static function getNumericRange(int $id): ?array
+    {
+        if (!function_exists('IPS_VariableExists') || !@IPS_VariableExists($id)) {
+            return null;
+        }
+        if (!empty(self::getAssociations($id))) {
+            return null;
+        }
+
+        $variable = @IPS_GetVariable($id);
+        $presentation = [];
+        if (function_exists('IPS_GetVariablePresentation')) {
+            try {
+                $resolved = @IPS_GetVariablePresentation($id);
+                if (is_array($resolved)) {
+                    $presentation = $resolved;
+                }
+            } catch (\Throwable $e) {}
+        }
+        if (empty($presentation) && is_array($variable['VariableCustomPresentation'] ?? null)) {
+            $presentation = $variable['VariableCustomPresentation'];
+        }
+
+        $sliderGuid = defined('VARIABLE_PRESENTATION_SLIDER') ? VARIABLE_PRESENTATION_SLIDER : '{6B9CAEEC-5958-C223-30F7-BD36569FC57A}';
+        $presentationGuid = trim((string)($presentation['PRESENTATION'] ?? ''), '{} ');
+        if ($presentationGuid !== '' && strcasecmp($presentationGuid, trim($sliderGuid, '{} ')) === 0) {
+            $min = (float)($presentation['MIN'] ?? 0);
+            $max = (float)($presentation['MAX'] ?? 100);
+            return $min < $max ? ['min' => $min, 'max' => $max] : null;
+        }
+
+        $profile = (string)($presentation['PROFILE'] ?? '');
+        if ($profile === '') {
+            $profile = (string)(($variable['VariableCustomProfile'] ?? '') ?: ($variable['VariableProfile'] ?? ''));
+        }
+        if ($profile !== '' && @IPS_VariableProfileExists($profile)) {
+            $p = @IPS_GetVariableProfile($profile);
+            $min = (float)($p['MinValue'] ?? 0);
+            $max = (float)($p['MaxValue'] ?? 0);
+            if ($min < $max) {
+                return ['min' => $min, 'max' => $max];
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Property-Rename-Migration v2: German → English property names.
      * Returns true if migration was performed (caller should return from ApplyChanges).
      */

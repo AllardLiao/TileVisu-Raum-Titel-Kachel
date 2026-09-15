@@ -21,3 +21,12 @@ roomtile_configured_pair=ok
 roomtile_rejects_foreign_link=ok
 multiroom_configured_pair=ok
 multiroom_rejects_foreign_link=ok
+
+== Zahlen-Schalter ==
+roomtile_dimmer_switches_off=ok
+roomtile_dimmer_switches_on_to_max=ok
+roomtile_float_slider_switches_on_to_max=ok
+roomtile_trigger_keeps_sent_value=ok
+roomtile_room_switch_toggles_dimmer=ok
+multiroom_dimmer_switches_on_to_max=ok
+multiroom_room_switch_toggles_dimmer=ok
