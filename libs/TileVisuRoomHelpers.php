@@ -133,6 +133,30 @@ trait TileVisuRoomHelpers
         return TileVisuLib::getIconAdvanced($id);
     }
 
+    /**
+     * Zielwert, wenn ein Schalter-Button eine Zahlenvariable bedient.
+     *
+     * Die Buttons schicken bei Zahlen einen festen Wert (1). Für Auslöser-Variablen
+     * ist das richtig, für einen Dimmer 0-100 % bedeutete es "1 %": Ausschalten
+     * ging nie, und die Hardware blieb auf ihrem kleinsten Wert hängen. Hat die
+     * Variable einen Wertebereich, wird deshalb umgeschaltet: steht sie über dem
+     * Minimum, auf das Minimum (aus), sonst auf das Maximum (an). Ohne
+     * Wertebereich bleibt es beim übergebenen Wert.
+     */
+    private function ResolveNumericSwitchValue(int $varId, int $vType, mixed $Value): int|float
+    {
+        $range = TileVisuLib::getNumericRange($varId);
+        if ($range === null) {
+            return $vType === 1 ? (int)$Value : (float)$Value;
+        }
+
+        $current = 0.0;
+        try { $current = (float)@GetValue($varId); } catch (Throwable $e) {}
+        $target = $current > $range['min'] ? $range['min'] : $range['max'];
+
+        return $vType === 1 ? (int)round($target) : (float)$target;
+    }
+
     private function GetButtonColors(int $id): array
     {
         $colors = ['on' => '', 'off' => ''];

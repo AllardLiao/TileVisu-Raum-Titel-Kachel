@@ -616,10 +616,8 @@ class MultiRoomTile extends IPSModuleStrict
 
                     if ($vType === 0) {
                         $newValue = ($Value === null) ? !@GetValue($varId) : (bool)$Value;
-                    } elseif ($vType === 1) {
-                        $newValue = (int)$Value;
-                    } elseif ($vType === 2) {
-                        $newValue = (float)$Value;
+                    } elseif ($vType === 1 || $vType === 2) {
+                        $newValue = $this->ResolveNumericSwitchValue($varId, $vType, $Value);
                     } else {
                         $newValue = (string)$Value;
                     }
@@ -661,9 +659,11 @@ class MultiRoomTile extends IPSModuleStrict
                 if ($vType === 0) { // BOOLEAN -> toggle
                     $newValue = !@GetValue($varId);
                 } elseif ($vType === 1) { // INTEGER
-                    $newValue = (int)$Value;
+                    $newValue = $this->ResolveNumericSwitchValue($varId, $vType, $Value);
                 } elseif ($vType === 3) { // STRING
                     $newValue = (string)$Value;
+                } elseif ($vType === 2 && TileVisuLib::getNumericRange($varId) !== null) { // FLOAT mit Wertebereich
+                    $newValue = $this->ResolveNumericSwitchValue($varId, $vType, $Value);
                 } else {
                     // Fallback: toggle
                     $newValue = !@GetValue($varId);

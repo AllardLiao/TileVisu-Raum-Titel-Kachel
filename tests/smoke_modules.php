@@ -187,3 +187,72 @@ assertSameValue('roomtile_configured_pair', $temp, IPS_GetLink($roomLink)['Targe
 assertSameValue('roomtile_rejects_foreign_link', 0, IPS_GetLink($otherRoomLink)['TargetID']);
 assertSameValue('multiroom_configured_pair', $dim, IPS_GetLink($multiLink)['TargetID']);
 assertSameValue('multiroom_rejects_foreign_link', 0, IPS_GetLink($otherMultiLink)['TargetID']);
+
+// ---------------------------------------------------------------------------
+// Schalter-Buttons auf Zahlenvariablen: mit Wertebereich umschalten
+// (Minimum <-> Maximum), ohne Wertebereich den übergebenen Wert setzen.
+// ---------------------------------------------------------------------------
+
+$setValueScript = IPS_CreateScript(0);
+IPS_SetScriptContent($setValueScript, 'SetValue($_IPS[\'VARIABLE\'], $_IPS[\'VALUE\']);');
+
+// Dimmer 0-100 % über ein Profil
+IPS_CreateVariableProfile('TileVisuTest.Dimmer', 1);
+IPS_SetVariableProfileValues('TileVisuTest.Dimmer', 0, 100, 1);
+$dimmer = IPS_CreateVariable(1);
+IPS_SetVariableCustomProfile($dimmer, 'TileVisuTest.Dimmer');
+IPS_SetVariableCustomAction($dimmer, $setValueScript);
+SetValue($dimmer, 40);
+
+// Dimmer als Float mit Schieberegler-Darstellung 0-1
+$floatDimmer = IPS_CreateVariable(2);
+IPS_SetVariableCustomPresentation($floatDimmer, ['PRESENTATION' => VARIABLE_PRESENTATION_SLIDER, 'MIN' => 0, 'MAX' => 1]);
+IPS_SetVariableCustomAction($floatDimmer, $setValueScript);
+SetValue($floatDimmer, 0.0);
+
+// Auslöser ohne Wertebereich
+$trigger = IPS_CreateVariable(1);
+IPS_SetVariableCustomAction($trigger, $setValueScript);
+SetValue($trigger, 0);
+
+$numericMenuItems = [];
+foreach (['md' => $dimmer, 'mf' => $floatDimmer, 'mt' => $trigger] as $itemId => $varId) {
+    $numericMenuItems[] = [
+        'Id' => $itemId, 'VariableId' => $varId, 'OpenObjectId' => 0, 'SceneControlId' => 0,
+        'ShowName' => true, 'ShowIcon' => true, 'ShowValue' => false,
+        'UseVarColor' => false, 'ColorTrue' => -1, 'ColorFalse' => -1,
+        'AltName' => '', 'Width' => 100, 'FullWidth' => false,
+    ];
+}
+
+ob_start();
+$rt->SetProperty('MenuItems', json_encode($numericMenuItems));
+$rt->SetProperty('Switch1', $dimmer);
+$rt->ApplyChanges();
+$rt->RequestAction('menuitem:md', 1);
+$dimmerAfterFirstClick = GetValue($dimmer);
+$rt->RequestAction('menuitem:md', 1);
+$dimmerAfterSecondClick = GetValue($dimmer);
+$rt->RequestAction('menuitem:mf', 1);
+$floatAfterClick = GetValue($floatDimmer);
+$rt->RequestAction('menuitem:mt', 1);
+$triggerAfterClick = GetValue($trigger);
+$rt->RequestAction('room:0:Switch1', 1);
+$roomSwitchAfterClick = GetValue($dimmer);
+
+$mr->SetProperty('Rooms', json_encode([['RoomName' => 'Bad', 'Switch1' => $dimmer, 'MenuItems' => $numericMenuItems]]));
+$mr->ApplyChanges();
+$mr->RequestAction('menuitem:md', 1);
+$multiDimmerAfterClick = GetValue($dimmer);
+$mr->RequestAction('room:0:Switch1', 1);
+$multiRoomSwitchAfterClick = GetValue($dimmer);
+ob_end_clean();
+
+echo "\n== Zahlen-Schalter ==\n";
+assertSameValue('roomtile_dimmer_switches_off', 0, $dimmerAfterFirstClick);
+assertSameValue('roomtile_dimmer_switches_on_to_max', 100, $dimmerAfterSecondClick);
+assertSameValue('roomtile_float_slider_switches_on_to_max', 1.0, $floatAfterClick);
+assertSameValue('roomtile_trigger_keeps_sent_value', 1, $triggerAfterClick);
+assertSameValue('roomtile_room_switch_toggles_dimmer', 0, $roomSwitchAfterClick);
+assertSameValue('multiroom_dimmer_switches_on_to_max', 100, $multiDimmerAfterClick);
+assertSameValue('multiroom_room_switch_toggles_dimmer', 0, $multiRoomSwitchAfterClick);
