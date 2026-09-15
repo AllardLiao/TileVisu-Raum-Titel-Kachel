@@ -1509,8 +1509,6 @@
             : (useImgCol ? (dsOff || fb || '') : (colOff || dsOff || fb || roomObj[colorKey] || ''));
           if (!bg && !useImgCol) bg = 'var(--accent-color)';
           btn.style.backgroundColor = bg;
-        } else if (rawVal !== undefined) {
-          updateNumericButtonState(btn, rawVal);
         } else {
           btn.classList.remove('inactive');
         }
@@ -2144,8 +2142,6 @@
               const useImgCol2 = !!(root && root.dataset && root.dataset.useimagecolors === '1') || GRID_FLAGS.useImageColorsForButtons;
               if (!bg && !useImgCol2) bg = 'var(--accent-color)';
               single.style.backgroundColor = bg;
-            } else {
-              updateNumericButtonState(single, value);
             }
           }
           return;
