@@ -254,6 +254,15 @@
                 }
                 
             ]
+        },
+        {
+          "type": "ExpansionPanel",
+          "caption": "Export",
+          "items": [
+            { "type": "Label", "caption": "Creates a separate Room Tile instance from one room of this tile. Global settings are written into the new instance." },
+            { "type": "Select", "name": "ExportRoomIndex", "caption": "Room", "options": [ { "caption": "-", "value": -1 } ] },
+            { "type": "Button", "caption": "Export room", "onClick": "MRT_ExportRoom($id, $ExportRoomIndex);" }
+          ]
         }
   ]
 }

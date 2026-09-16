@@ -7,6 +7,42 @@ require_once __DIR__ . '/../libs/TileVisuRoomHelpers.php';
 
 class MultiRoomTile extends IPSModuleStrict
 {
+    private const ROOM_TILE_MODULE_ID = '{0E33BB6A-B5A7-4D25-883A-EDF0551DB5C3}';
+
+    /** Globale Einstellungen, die beide Module unter gleichem Namen kennen */
+    private const EXPORT_GLOBAL_PROPERTIES = [
+        'BorderRadius', 'TransparentStatusColors', 'TransparentMenuStatusColors',
+        'GroupMenuInfoElements', 'UseImageColorsForButtons',
+        'Default_InfoFontSize', 'Default_InfoFontColor', 'Default_InfoHeight',
+        'Default_MenuFontSize', 'Default_MenuFontColor', 'Default_MenuTransparency',
+        'Default_MenuBackgroundColor', 'Default_TileBackgroundColor',
+        'Default_RoomNameFontSize', 'Default_RoomNameFontColor', 'Default_ImageTransparency',
+        'Default_InfoTopTransparency', 'Default_InfoTopBackgroundColor',
+        'Default_BgFilterBrightnessMin', 'Default_BgFilterBrightnessMax',
+        'Default_BgFilterContrastMin', 'Default_BgFilterContrastMax',
+        'Default_BgFilterGrayscaleMin', 'Default_BgFilterGrayscaleMax',
+    ];
+
+    /** Nur im Verbund sinnvoll, gehoert nicht in eine eigenstaendige Kachel */
+    private const EXPORT_SKIPPED_ROOM_FIELDS = ['TargetCategoryId'];
+
+    /** "-1" heisst hier "globale Einstellung verwenden" */
+    private const EXPORT_COLOR_FIELDS = [
+        'TileBackgroundColor', 'InfoFontColor', 'MenuFontColor',
+        'RoomNameFontColor', 'MenuBackgroundColor', 'InfoTopBackgroundColor',
+    ];
+
+    /** 0 oder kleiner heisst hier "globale Einstellung verwenden" */
+    private const EXPORT_SIZE_FIELDS = ['InfoFontSize', 'MenuFontSize', 'RoomNameFontSize'];
+
+    /** Negativ heisst hier "globale Einstellung verwenden" */
+    private const EXPORT_PERCENT_FIELDS = [
+        'MenuTransparency', 'ImageTransparency', 'InfoTopTransparency',
+        'BgFilterBrightnessMin', 'BgFilterBrightnessMax',
+        'BgFilterContrastMin', 'BgFilterContrastMax',
+        'BgFilterGrayscaleMin', 'BgFilterGrayscaleMax',
+    ];
+
     use TileVisuRoomHelpers;
 
     public function GetVisualizationTile(): string
@@ -135,8 +171,44 @@ class MultiRoomTile extends IPSModuleStrict
                 }
             }
             unset($element);
+            $this->fillExportRoomOptions($form);
         }
         return json_encode($form);
+    }
+
+    /**
+     * Fuellt die Auswahl im Export-Bereich mit den vorhandenen Zimmern.
+     */
+    private function fillExportRoomOptions(array &$form): void
+    {
+        $rooms = @json_decode($this->ReadPropertyString('Rooms'), true);
+        $options = [];
+        if (is_array($rooms)) {
+            foreach ($rooms as $index => $room) {
+                if (!is_array($room)) continue;
+                $name = trim((string)($room['RoomName'] ?? ''));
+                if ($name === '') {
+                    $name = 'Raum ' . ((int)$index + 1);
+                }
+                $options[] = ['caption' => $name, 'value' => (int)$index];
+            }
+        }
+        if (empty($options)) {
+            $options[] = ['caption' => '-', 'value' => -1];
+        }
+        foreach ($form['elements'] as &$element) {
+            if (!is_array($element) || ($element['type'] ?? '') !== 'ExpansionPanel' || ($element['caption'] ?? '') !== 'Export') {
+                continue;
+            }
+            foreach ($element['items'] as &$item) {
+                if (is_array($item) && ($item['name'] ?? '') === 'ExportRoomIndex') {
+                    $item['options'] = $options;
+                    $item['value'] = (int)$options[0]['value'];
+                }
+            }
+            unset($item);
+        }
+        unset($element);
     }
 
     public function ApplyChanges(): void
@@ -677,6 +749,130 @@ class MultiRoomTile extends IPSModuleStrict
                 }
             }
             return;
+        }
+    }
+
+    /**
+     * Exportiert einen Raum aus der Zimmer-Liste in eine eigenstaendige
+     * Room-Tile-Instanz unterhalb der Wurzel.
+     *
+     * Raumfelder mit "-1" bzw. 0 bedeuten "globale Einstellung verwenden". Sie
+     * werden beim Export durch den globalen Wert dieser Instanz ersetzt, damit
+     * die neue Kachel genauso aussieht wie der Raum im Verbund.
+     *
+     * @param int $Index Position des Raums in der Zimmer-Liste (0-basiert)
+     * @return int InstanceID der neuen Room-Tile-Instanz
+     */
+    public function ExportRoom(int $Index): int
+    {
+        $rooms = @json_decode($this->ReadPropertyString('Rooms'), true);
+        if (!is_array($rooms) || !isset($rooms[$Index]) || !is_array($rooms[$Index])) {
+            throw new Exception('Kein Raum an Position ' . $Index . ' vorhanden');
+        }
+        $room = $rooms[$Index];
+
+        $name = trim((string)($room['RoomName'] ?? ''));
+        if ($name === '') {
+            $name = 'Raum ' . ($Index + 1);
+        }
+
+        $targetId = IPS_CreateInstance(self::ROOM_TILE_MODULE_ID);
+        IPS_SetParent($targetId, 0);
+        IPS_SetName($targetId, $name);
+
+        foreach ($this->buildRoomExportProperties($room) as $property => $value) {
+            $this->CopyPropertyTo($targetId, $property, $value);
+        }
+        IPS_ApplyChanges($targetId);
+
+        $this->SendDebug('ExportRoom', 'Raum "' . $name . '" nach Instanz #' . $targetId . ' exportiert', 0);
+        return $targetId;
+    }
+
+    /**
+     * Eigenschaften der neuen Room-Tile-Instanz: zuerst die globalen
+     * Einstellungen dieser Instanz, darueber die Werte des Raums.
+     */
+    private function buildRoomExportProperties(array $room): array
+    {
+        $defaults = $this->readGlobalDefaults();
+        $out = [];
+
+        // Globale Einstellungen, die es in beiden Modulen unter gleichem Namen gibt
+        foreach (self::EXPORT_GLOBAL_PROPERTIES as $property) {
+            $value = $this->ReadOwnProperty($property);
+            if ($value !== null) {
+                $out[$property] = $value;
+            }
+        }
+
+        foreach ($room as $key => $value) {
+            if (in_array($key, self::EXPORT_SKIPPED_ROOM_FIELDS, true)) {
+                continue;
+            }
+            if (is_array($value)) {
+                // Unterlisten (Info-Elemente, Menue-Eintraege) liegen als JSON vor
+                $out[$key] = json_encode($value);
+                continue;
+            }
+            $out[$key] = $value;
+        }
+
+        // "-1" bzw. 0 heisst "globale Einstellung" - beim Export den globalen Wert eintragen
+        foreach (self::EXPORT_COLOR_FIELDS as $key) {
+            if (!isset($defaults[$key])) continue;
+            if (!array_key_exists($key, $out) || (int)$out[$key] === -1) {
+                $out[$key] = (int)$defaults[$key];
+            }
+        }
+        foreach (self::EXPORT_SIZE_FIELDS as $key) {
+            if (!isset($defaults[$key])) continue;
+            if (!array_key_exists($key, $out) || (int)$out[$key] <= 0) {
+                $out[$key] = (int)$defaults[$key];
+            }
+        }
+        foreach (self::EXPORT_PERCENT_FIELDS as $key) {
+            if (!isset($defaults[$key])) continue;
+            if (!array_key_exists($key, $out) || (float)$out[$key] < 0) {
+                $out[$key] = (float)$defaults[$key];
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Schreibt eine Eigenschaft in die Zielinstanz, passend zum dortigen Typ.
+     * Eigenschaften, die es dort nicht gibt, werden uebersprungen.
+     */
+    private function CopyPropertyTo(int $targetId, string $property, mixed $value): void
+    {
+        try {
+            $current = @IPS_GetProperty($targetId, $property);
+        } catch (Throwable $e) {
+            return;
+        }
+        if (is_bool($current)) {
+            $value = (bool)$value;
+        } elseif (is_int($current)) {
+            $value = (int)$value;
+        } elseif (is_float($current)) {
+            $value = (float)$value;
+        } elseif (is_string($current)) {
+            $value = is_string($value) ? $value : (string)json_encode($value);
+        }
+        @IPS_SetProperty($targetId, $property, $value);
+    }
+
+    /**
+     * Eigener Property-Wert oder null, wenn es die Eigenschaft nicht gibt.
+     */
+    private function ReadOwnProperty(string $property): mixed
+    {
+        try {
+            return @IPS_GetProperty($this->InstanceID, $property);
+        } catch (Throwable $e) {
+            return null;
         }
     }
 

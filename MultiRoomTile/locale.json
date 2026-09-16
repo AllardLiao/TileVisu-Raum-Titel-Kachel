@@ -119,7 +119,11 @@
       "Open object": "Objekt öffnen",
       "Width": "Breite",
       "Max width": "Maximale Breite",
-      "URL Background image (String Variable)": "URL Hintergrundbild (String-Variable)"
+      "URL Background image (String Variable)": "URL Hintergrundbild (String-Variable)",
+      "Export": "Export",
+      "Creates a separate Room Tile instance from one room of this tile. Global settings are written into the new instance.": "Erstellt aus einem Zimmer dieser Kachel eine eigenständige Room-Tile-Instanz. Globale Einstellungen werden dabei übernommen.",
+      "Room": "Zimmer",
+      "Export room": "Zimmer exportieren"
     }
   }
 }
