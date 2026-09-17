@@ -517,6 +517,44 @@
       btn.addEventListener('pointercancel', (e) => finish(e, false));
     }
 
+    // -----------------------------------------------------------------------
+    // Hoehe von Infoleiste und Menueleiste messen.
+    //
+    // Der freie Bereich dazwischen bestimmt, wo Zimmername und Info-Center
+    // sitzen. Die Menueleiste kann mehrere Zeilen hoch sein, deshalb wird
+    // gemessen statt geschaetzt - und bei jeder Aenderung nachgefuehrt.
+    // -----------------------------------------------------------------------
+    function applyTileBarMetrics(tile) {
+      if (!tile) return;
+      const tileRect = tile.getBoundingClientRect();
+      if (tileRect.height === 0) return;
+
+      // Die Infoleiste ist auf volle Hoehe gestreckt; ihre Inhalte sitzen oben.
+      // Massgeblich ist daher die Unterkante des untersten sichtbaren Elements.
+      let top = 0;
+      const row = tile.querySelector('.row-top');
+      if (row && !row.classList.contains('hidden')) {
+        for (const child of row.children) {
+          if (!child || child.classList.contains('hidden')) continue;
+          const rect = child.getBoundingClientRect();
+          if (rect.height === 0) continue;
+          top = Math.max(top, rect.bottom - tileRect.top);
+        }
+      }
+
+      let bottom = 0;
+      const menu = tile.querySelector('.menubar');
+      if (menu && !menu.classList.contains('is-hidden') && !menu.classList.contains('hidden')) {
+        const rect = menu.getBoundingClientRect();
+        if (rect.height > 0) {
+          bottom = tileRect.bottom - rect.top;
+        }
+      }
+
+      tile.style.setProperty('--bar-top', Math.max(0, Math.round(top)) + 'px');
+      tile.style.setProperty('--bar-bottom', Math.max(0, Math.round(bottom)) + 'px');
+    }
+
     // Senkrechte Ausrichtung des Zimmernamens umschalten
     function applyRoomNameAlign(tile, align) {
       if (!tile) return;
