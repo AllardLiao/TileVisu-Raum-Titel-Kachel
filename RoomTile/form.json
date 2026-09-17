@@ -75,7 +75,6 @@
           { "type": "Select", "name": "RoomNameAlign", "caption": "Vertical alignment", "options": [ { "caption": "Middle between info bar and menu bar", "value": "bars" }, { "caption": "Middle of tile", "value": "tile" } ] }
         ]},
         { "type": "ExpansionPanel", "caption": "Info center", "expanded": false, "items": [
-          { "type": "Select", "name": "InfoCenterAlign", "caption": "Vertical alignment", "options": [ { "caption": "Middle between info bar and menu bar", "value": "bars" }, { "caption": "Middle of tile", "value": "tile" } ] },
           { "type": "RowLayout", "items": [
 
              {           "type": "ColumnLayout",
@@ -105,7 +104,8 @@
           ]},
           { "type": "RowLayout", "items": [
             { "type": "SelectColor", "name": "InfoMiddleColor", "caption": "Color (icon/text)", "allowTransparent": true }
-          ]}
+          ]},
+          { "type": "Select", "name": "InfoCenterAlign", "caption": "Vertical alignment", "options": [ { "caption": "Middle between info bar and menu bar", "value": "bars" }, { "caption": "Middle of tile", "value": "tile" } ] }
         ]},
         { "type": "ExpansionPanel", "caption": "Background", "expanded": false, "items": [
           { "type": "SelectVariable", "name": "BackgroundImageUrl", "caption": "URL Background image (String Variable)", "validVariableTypes": [3] },
