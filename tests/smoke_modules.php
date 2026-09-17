@@ -187,3 +187,37 @@ assertSameValue('roomtile_configured_pair', $temp, IPS_GetLink($roomLink)['Targe
 assertSameValue('roomtile_rejects_foreign_link', 0, IPS_GetLink($otherRoomLink)['TargetID']);
 assertSameValue('multiroom_configured_pair', $dim, IPS_GetLink($multiLink)['TargetID']);
 assertSameValue('multiroom_rejects_foreign_link', 0, IPS_GetLink($otherMultiLink)['TargetID']);
+
+// ---------------------------------------------------------------------------
+// Senkrechte Ausrichtung des Zimmernamens: Zimmerwert schlaegt die globale
+// Vorgabe, "global" faellt auf sie zurueck.
+// ---------------------------------------------------------------------------
+
+function roomNameAlignOf(string $tile, int $roomIndex = 0): ?string
+{
+    $payload = json_decode(payloadOf($tile), true);
+    return $payload['rooms'][$roomIndex]['roomnamealign'] ?? null;
+}
+
+ob_start();
+$rt->SetProperty('RoomNameAlign', 'tile');
+$rt->ApplyChanges();
+$alignTile = (string)$rt->GetVisualizationTile();
+$rt->SetProperty('RoomNameAlign', 'bars');
+$rt->ApplyChanges();
+$alignBars = (string)$rt->GetVisualizationTile();
+
+$mr->SetProperty('Default_RoomNameAlign', 'bars');
+$mr->SetProperty('Rooms', json_encode([
+    ['RoomName' => 'Folgt global'],
+    ['RoomName' => 'Eigene Wahl', 'RoomNameAlign' => 'tile'],
+]));
+$mr->ApplyChanges();
+$multiTile = (string)$mr->GetVisualizationTile();
+ob_end_clean();
+
+echo "\n== Ausrichtung Zimmername ==\n";
+assertSameValue('roomtile_align_tile', 'tile', roomNameAlignOf($alignTile));
+assertSameValue('roomtile_align_bars', 'bars', roomNameAlignOf($alignBars));
+assertSameValue('multiroom_align_follows_default', 'bars', roomNameAlignOf($multiTile, 0));
+assertSameValue('multiroom_align_room_wins', 'tile', roomNameAlignOf($multiTile, 1));

@@ -132,12 +132,13 @@
       opacity: 0.5;
     }
 
+    /* Senkrechte Mitte: zwischen den gemessenen Leisten (Standard) oder in der ganzen Kachel */
     .center { 
       position: absolute;
       left: 0;
       right: 0;
-      top: 0;
-      bottom: var(--middle-gap);
+      top: var(--bar-top, 0px);
+      bottom: var(--bar-bottom, var(--middle-gap));
       display: flex;
       align-items: center;
       justify-content: center;
@@ -145,8 +146,11 @@
       pointer-events: none;
       z-index: 4;
       padding: 0 20px;
-      padding-top: 60px;
       padding-bottom: 0;
+    }
+    .center.align-tile {
+      top: 0;
+      bottom: 0;
     }
     .center * {
       pointer-events: none;
@@ -767,6 +771,7 @@
       tile.appendChild(menu);
 
       grid.appendChild(tile);
+      observeTileBars(tile);
       return tile;
     }
 
@@ -1401,6 +1406,7 @@
       if (rn && room.roomname !== undefined) rn.textContent = room.roomname;
       if (room.roomnamefontsize !== undefined) rn.style.fontSize = room.roomnamefontsize + 'px';
       if (room.roomnamefontcolor) rn.style.color = room.roomnamefontcolor;
+      applyRoomNameAlign(root, room.roomnamealign);
 
       // Ensure top info layout matches setting
       setTopInfoLayout(id, !!room.infotopcentered);

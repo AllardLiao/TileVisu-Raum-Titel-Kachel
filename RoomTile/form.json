@@ -71,7 +71,8 @@
           { "type": "RowLayout", "items": [
             { "type": "NumberSpinner", "name": "RoomNameFontSize", "caption": "Font size", "digits": 0, "minimum": 8, "maximum": 200, "suffix": "px" },
             { "type": "SelectColor", "name": "RoomNameFontColor", "caption": "Font color", "allowTransparent": true }
-          ]}
+          ]},
+          { "type": "Select", "name": "RoomNameAlign", "caption": "Vertical alignment", "options": [ { "caption": "Middle between info bar and menu bar", "value": "bars" }, { "caption": "Middle of tile", "value": "tile" } ] }
         ]},
         { "type": "ExpansionPanel", "caption": "Info center", "expanded": false, "items": [
           { "type": "RowLayout", "items": [

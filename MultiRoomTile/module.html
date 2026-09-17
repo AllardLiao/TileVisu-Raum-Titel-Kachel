@@ -123,6 +123,7 @@
       opacity: 0.5;
     }
 
+    /* Senkrechte Mitte: in der ganzen Kachel (Standard) oder zwischen den gemessenen Leisten */
     .center { 
       position: absolute;
       left: 0;
@@ -135,6 +136,10 @@
       text-align: center;
       pointer-events: none;
       z-index: 4;
+    }
+    .center.align-bars {
+      top: var(--bar-top, 0px);
+      bottom: var(--bar-bottom, 0px);
     }
     .center * {
       pointer-events: none;
@@ -700,6 +705,7 @@
       tile.appendChild(menu);
 
       grid.appendChild(tile);
+      observeTileBars(tile);
       return tile;
     }
 
@@ -1277,6 +1283,7 @@
       if (room.roomnamefontsize !== undefined) rn.style.fontSize = room.roomnamefontsize + 'px';
       if (room.roomnamefontcolor) rn.style.color = room.roomnamefontcolor;
       if (rn) rn.classList.toggle('hidden', room.showroomname === false);
+      applyRoomNameAlign(root, room.roomnamealign);
 
       const hasDynamicInfo = Array.isArray(room.infoitems) && room.infoitems.length > 0;
       // Set centered flag for legacy mode handling

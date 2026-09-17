@@ -119,7 +119,12 @@
       "Open object": "Objekt öffnen",
       "Width": "Breite",
       "Max width": "Maximale Breite",
-      "URL Background image (String Variable)": "URL Hintergrundbild (String-Variable)"
+      "URL Background image (String Variable)": "URL Hintergrundbild (String-Variable)",
+      "Vertical alignment": "Senkrechte Ausrichtung",
+      "Vertical alignment (room name)": "Senkrechte Ausrichtung (Zimmername)",
+      "Middle between info bar and menu bar": "Mitte zwischen Info- und Menüleiste",
+      "Middle of tile": "Mitte der Kachel",
+      "Use global default": "Globale Vorgabe verwenden"
     }
   }
 }

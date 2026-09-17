@@ -118,7 +118,12 @@
       "Show menu": "Menü anzeigen",
       "Button colors from background image": "Buttonfarben aus Hintergrundbild",
       "URL Background image (String Variable)": "URL Hintergrundbild (String-Variable)",
-      "The filter is applied to the background image. The filter strength is controlled by the light status and dim value. The filter strength is maximum when the light status is off and minimum when the light status is on. The filter strength is also controlled by the dim value. The filter strength is maximum when the dim value is 0 and minimum when the dim value is 100. Note: The filter is only applied if a background image is configured. If separate images for light on and light off are configured, the filter is not applied.": "Der Filter wird auf das Hintergrundbild angewendet. Die Filterstärke wird durch den Lichtstatus und den Dimmwert gesteuert. Die Filterstärke ist maximal wenn der Lichtstatus aus ist und minimal wenn der Lichtstatus an ist. Die Filterstärke wird auch durch den Dimmwert gesteuert. Die Filterstärke ist maximal wenn der Dimmwert 0 ist und minimal wenn der Dimmwert 100 ist. Hinweis: Der Filter wird nur angewendet, wenn ein Hintergrundbild konfiguriert ist. Sind jeweils ein Bild für Licht an und Licht aus konfiguriert, wird der Filter nicht angewendet."
+      "The filter is applied to the background image. The filter strength is controlled by the light status and dim value. The filter strength is maximum when the light status is off and minimum when the light status is on. The filter strength is also controlled by the dim value. The filter strength is maximum when the dim value is 0 and minimum when the dim value is 100. Note: The filter is only applied if a background image is configured. If separate images for light on and light off are configured, the filter is not applied.": "Der Filter wird auf das Hintergrundbild angewendet. Die Filterstärke wird durch den Lichtstatus und den Dimmwert gesteuert. Die Filterstärke ist maximal wenn der Lichtstatus aus ist und minimal wenn der Lichtstatus an ist. Die Filterstärke wird auch durch den Dimmwert gesteuert. Die Filterstärke ist maximal wenn der Dimmwert 0 ist und minimal wenn der Dimmwert 100 ist. Hinweis: Der Filter wird nur angewendet, wenn ein Hintergrundbild konfiguriert ist. Sind jeweils ein Bild für Licht an und Licht aus konfiguriert, wird der Filter nicht angewendet.",
+      "Vertical alignment": "Senkrechte Ausrichtung",
+      "Vertical alignment (room name)": "Senkrechte Ausrichtung (Zimmername)",
+      "Middle between info bar and menu bar": "Mitte zwischen Info- und Menüleiste",
+      "Middle of tile": "Mitte der Kachel",
+      "Use global default": "Globale Vorgabe verwenden"
     }
   }
 }
