@@ -221,3 +221,15 @@ assertSameValue('roomtile_align_tile', 'tile', roomNameAlignOf($alignTile));
 assertSameValue('roomtile_align_bars', 'bars', roomNameAlignOf($alignBars));
 assertSameValue('multiroom_align_follows_default', 'bars', roomNameAlignOf($multiTile, 0));
 assertSameValue('multiroom_align_room_wins', 'tile', roomNameAlignOf($multiTile, 1));
+
+// Info-Center (nur RoomTile) wird unabhaengig vom Zimmernamen ausgerichtet
+ob_start();
+$rt->SetProperty('InfoCenterAlign', 'tile');
+$rt->ApplyChanges();
+$infoCenterTile = (string)$rt->GetVisualizationTile();
+ob_end_clean();
+$payloadBars = json_decode(payloadOf($alignBars), true);
+$payloadTile = json_decode(payloadOf($infoCenterTile), true);
+assertSameValue('infocenter_align_default_bars', 'bars', $payloadBars['rooms'][0]['infocenteralign'] ?? null);
+assertSameValue('infocenter_align_tile', 'tile', $payloadTile['rooms'][0]['infocenteralign'] ?? null);
+assertSameValue('infocenter_align_independent', 'bars', $payloadTile['rooms'][0]['roomnamealign'] ?? null);

@@ -385,6 +385,16 @@
       applyTileBarMetrics(tile);
     }
 
+    // Senkrechte Ausrichtung des Info-Centers umschalten
+    function applyInfoCenterAlign(tile, align) {
+      if (!tile) return;
+      const centerInfo = tile.querySelector(':scope > .center-info');
+      if (!centerInfo) return;
+      centerInfo.classList.toggle('align-bars', align === 'bars');
+      centerInfo.classList.toggle('align-tile', align === 'tile');
+      applyTileBarMetrics(tile);
+    }
+
     function observeTileBars(tile) {
       if (!tile || tile.dataset.barsObserved === '1') return;
       tile.dataset.barsObserved = '1';

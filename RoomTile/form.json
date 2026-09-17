@@ -75,6 +75,7 @@
           { "type": "Select", "name": "RoomNameAlign", "caption": "Vertical alignment", "options": [ { "caption": "Middle between info bar and menu bar", "value": "bars" }, { "caption": "Middle of tile", "value": "tile" } ] }
         ]},
         { "type": "ExpansionPanel", "caption": "Info center", "expanded": false, "items": [
+          { "type": "Select", "name": "InfoCenterAlign", "caption": "Vertical alignment", "options": [ { "caption": "Middle between info bar and menu bar", "value": "bars" }, { "caption": "Middle of tile", "value": "tile" } ] },
           { "type": "RowLayout", "items": [
 
              {           "type": "ColumnLayout",

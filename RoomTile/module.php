@@ -120,6 +120,7 @@ class RoomTile extends IPSModuleStrict
         $this->RegisterPropertyInteger('RoomNameFontColor', -1);
         $this->RegisterPropertyInteger('RoomNameFontSize', 50);
         $this->RegisterPropertyString('RoomNameAlign', 'bars');
+        $this->RegisterPropertyString('InfoCenterAlign', 'bars');
         $this->RegisterPropertyInteger('InfoFontSize', -1);
         $this->RegisterPropertyInteger('InfoFontColor', -1);
         $this->RegisterPropertyInteger('MenuFontSize', -1);
@@ -1216,6 +1217,10 @@ class RoomTile extends IPSModuleStrict
         }
         $r['roomnamealign'] = ($rnAlign === 'tile') ? 'tile' : 'bars';
 
+        // Senkrechte Ausrichtung des Info-Centers
+        $icAlign = (string)($room['InfoCenterAlign'] ?? 'bars');
+        $r['infocenteralign'] = ($icAlign === 'tile') ? 'tile' : 'bars';
+
         $rncol = null;
         if (array_key_exists('RoomNameFontColor', $room)) { $rncol = (int)$room['RoomNameFontColor']; }
         if ($rncol === null || $rncol === -1) { $rncol = 0xFFFFFF; }
@@ -1567,6 +1572,7 @@ class RoomTile extends IPSModuleStrict
         $room['RoomNameFontColor'] = (int)$this->ReadPropertyInteger('RoomNameFontColor');
         $room['RoomNameFontSize'] = (int)$this->ReadPropertyInteger('RoomNameFontSize');
         $room['RoomNameAlign'] = (string)$this->ReadPropertyString('RoomNameAlign');
+        $room['InfoCenterAlign'] = (string)$this->ReadPropertyString('InfoCenterAlign');
         $room['InfoFontSize'] = (int)$this->ReadPropertyInteger('InfoFontSize');
         $room['InfoFontColor'] = (int)$this->ReadPropertyInteger('InfoFontColor');
         $room['MenuFontSize'] = (int)$this->ReadPropertyInteger('MenuFontSize');
