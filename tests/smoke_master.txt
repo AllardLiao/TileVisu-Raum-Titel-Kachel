@@ -5,7 +5,7 @@ payload={"grid":{"borderRadius":10,"buttonHeight":25,"useImageColorsForButtons":
 log=
 
 == MultiRoomTile ==
-form.len=63417 form.sha1=8370eef372cfd85e08b92acd971fc1d2908c4490
+form.len=63417 form.sha1=c0261f7762cf12a129a42f2cbb3b1d7ab9e3cd25
 tile.len=135962 tile.sha1=6a31a0cbe4954eb34c814ed5c58295bf2e52ce57
 payload={"grid":{"minWidth":300,"minHeight":220,"gap":12,"borderRadius":10,"useImageColorsForButtons":false,"transparentStatusColors":true,"transparentMenuStatusColors":true,"groupMenuInfoElements":false,"columns":0,"useFullTileHeight":false,"customMargin":-1},"rooms":[]}
 log=

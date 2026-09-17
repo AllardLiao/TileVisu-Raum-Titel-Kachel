@@ -224,6 +224,27 @@
       ]
     },
         {
+          "type": "ExpansionPanel",
+          "caption": "Export",
+          "items": [
+            { "type": "Label", "caption": "Creates a separate Room Tile instance from one room of this tile. Global settings are written into the new instance." },
+            { "type": "Select", "name": "ExportRoomIndex", "caption": "Room", "options": [ { "caption": "-", "value": -1 } ] },
+            { "type": "Button", "caption": "Export room", "onClick": "MRT_ExportRoom($id, $ExportRoomIndex);" }
+          ]
+        },
+        {
+          "type": "ExpansionPanel",
+          "caption": "Import",
+          "items": [
+            { "type": "Label", "caption": "Adds an existing Room Tile instance as another room of this tile." },
+            { "type": "Button", "caption": "Update available instances", "onClick": "MRT_RefreshImportInstances($id);" },
+            { "type": "Select", "name": "ImportInstanceId", "caption": "Room Tile instance", "options": [ { "caption": "-", "value": 0 } ] },
+            { "type": "CheckBox", "name": "ImportIndividualSettings", "caption": "Apply individual settings", "value": false },
+            { "type": "CheckBox", "name": "ImportInfoCenter", "caption": "Move info center into info bar", "value": true },
+            { "type": "Button", "caption": "Import room", "onClick": "MRT_ImportRoom($id, $ImportInstanceId, $ImportIndividualSettings, $ImportInfoCenter);" }
+          ]
+        },
+        {
             "type": "Label",
             "caption": ""
         },
@@ -254,27 +275,6 @@
                 }
                 
             ]
-        },
-        {
-          "type": "ExpansionPanel",
-          "caption": "Export",
-          "items": [
-            { "type": "Label", "caption": "Creates a separate Room Tile instance from one room of this tile. Global settings are written into the new instance." },
-            { "type": "Select", "name": "ExportRoomIndex", "caption": "Room", "options": [ { "caption": "-", "value": -1 } ] },
-            { "type": "Button", "caption": "Export room", "onClick": "MRT_ExportRoom($id, $ExportRoomIndex);" }
-          ]
-        },
-        {
-          "type": "ExpansionPanel",
-          "caption": "Import",
-          "items": [
-            { "type": "Label", "caption": "Adds an existing Room Tile instance as another room of this tile." },
-            { "type": "Button", "caption": "Update available instances", "onClick": "MRT_RefreshImportInstances($id);" },
-            { "type": "Select", "name": "ImportInstanceId", "caption": "Room Tile instance", "options": [ { "caption": "-", "value": 0 } ] },
-            { "type": "CheckBox", "name": "ImportIndividualSettings", "caption": "Apply individual settings", "value": false },
-            { "type": "CheckBox", "name": "ImportInfoCenter", "caption": "Move info center into info bar", "value": true },
-            { "type": "Button", "caption": "Import room", "onClick": "MRT_ImportRoom($id, $ImportInstanceId, $ImportIndividualSettings, $ImportInfoCenter);" }
-          ]
         }
   ]
 }
