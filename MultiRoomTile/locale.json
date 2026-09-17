@@ -123,7 +123,14 @@
       "Export": "Export",
       "Creates a separate Room Tile instance from one room of this tile. Global settings are written into the new instance.": "Erstellt aus einem Zimmer dieser Kachel eine eigenständige Room-Tile-Instanz. Globale Einstellungen werden dabei übernommen.",
       "Room": "Zimmer",
-      "Export room": "Zimmer exportieren"
+      "Export room": "Zimmer exportieren",
+      "Import": "Import",
+      "Adds an existing Room Tile instance as another room of this tile.": "Fügt eine vorhandene Room-Tile-Instanz als weiteres Zimmer dieser Kachel hinzu.",
+      "Update available instances": "Vorhandene Instanzen aktualisieren",
+      "Room Tile instance": "Room-Tile-Instanz",
+      "Apply individual settings": "Individuelle Einstellungen übernehmen",
+      "Move info center into info bar": "Infocenter in Infoleiste überführen",
+      "Import room": "Zimmer importieren"
     }
   }
 }
