@@ -1023,6 +1023,8 @@ class MultiRoomTile extends IPSModuleStrict
         }
         $room['RoomName'] = $name;
         $room['TargetCategoryId'] = 0;
+        // Die Room-Tile kennt keinen Schalter dafuer; im Verbund wird der Name gezeigt
+        $room['ShowRoomName'] = true;
 
         if ($MoveInfoCenter) {
             $room['InfoItems'] = array_merge(
@@ -1040,7 +1042,8 @@ class MultiRoomTile extends IPSModuleStrict
             }
             foreach (self::EXPORT_SIZE_FIELDS as $field) {
                 if (array_key_exists($field, $room)) {
-                    $room[$field] = 0;
+                    // -1 ist bei allen Groessenfeldern der Platzhalter fuer "global"
+                    $room[$field] = -1;
                 }
             }
             foreach (self::EXPORT_PERCENT_FIELDS as $field) {

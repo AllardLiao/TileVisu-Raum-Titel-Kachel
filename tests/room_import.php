@@ -93,7 +93,9 @@ assertSameValue('menu_items_imported', $menuItems, listOf($room, 'MenuItems'));
 assertSameValue('target_category_reset', 0, $room['TargetCategoryId'] ?? null);
 
 // Ohne individuelle Einstellungen gilt die globale Einstellung der Kachel
-assertSameValue('global_size_placeholder', 0, $room['MenuFontSize'] ?? null);
+assertSameValue('global_size_placeholder', -1, $room['MenuFontSize'] ?? null);
+assertSameValue('room_name_size_placeholder', -1, $room['RoomNameFontSize'] ?? null);
+assertSameValue('show_room_name_enabled', true, $room['ShowRoomName'] ?? null);
 assertSameValue('global_color_placeholder', -1, $room['TileBackgroundColor'] ?? null);
 assertSameValue('global_percent_placeholder', -1.0, (float)($room['MenuTransparency'] ?? 0));
 
@@ -116,6 +118,7 @@ ob_end_clean();
 $second = $rooms[1] ?? [];
 assertSameValue('second_room_added', 2, count($rooms));
 assertSameValue('individual_size_kept', 19, $second['MenuFontSize'] ?? null);
+assertSameValue('show_room_name_also_enabled', true, $second['ShowRoomName'] ?? null);
 assertSameValue('individual_color_kept', 0x445566, $second['TileBackgroundColor'] ?? null);
 assertSameValue('individual_percent_kept', 42.0, (float)($second['MenuTransparency'] ?? 0));
 assertSameValue('info_center_not_moved', 0, count(listOf($second, 'InfoItems')));
