@@ -517,6 +517,50 @@
       btn.addEventListener('pointercancel', (e) => finish(e, false));
     }
 
+    // Senkrechte Ausrichtung des Zimmernamens umschalten
+    function applyRoomNameAlign(tile, align) {
+      if (!tile) return;
+      const center = tile.querySelector(':scope > .center');
+      if (!center) return;
+      center.classList.toggle('align-bars', align === 'bars');
+      center.classList.toggle('align-tile', align === 'tile');
+      applyTileBarMetrics(tile);
+    }
+
+    // Senkrechte Ausrichtung des Info-Centers umschalten
+    function applyInfoCenterAlign(tile, align) {
+      if (!tile) return;
+      const centerInfo = tile.querySelector(':scope > .center-info');
+      if (!centerInfo) return;
+      centerInfo.classList.toggle('align-bars', align === 'bars');
+      centerInfo.classList.toggle('align-tile', align === 'tile');
+      applyTileBarMetrics(tile);
+    }
+
+    function observeTileBars(tile) {
+      if (!tile || tile.dataset.barsObserved === '1') return;
+      tile.dataset.barsObserved = '1';
+      const update = () => applyTileBarMetrics(tile);
+
+      // Direkt nach dem Aufbau stehen Schriften und Icons noch nicht,
+      // deshalb spaeter noch einmal messen.
+      update();
+      requestAnimationFrame(update);
+      for (const delay of [150, 600]) setTimeout(update, delay);
+
+      if (typeof ResizeObserver === 'function') {
+        const observer = new ResizeObserver(update);
+        for (const selector of ['.row-top', '.menubar']) {
+          const el = tile.querySelector(selector);
+          if (el) observer.observe(el);
+        }
+        observer.observe(tile);
+        // Referenz halten, sonst kann der Beobachter eingesammelt werden
+        tile.tileBarObserver = observer;
+      }
+      window.addEventListener('resize', update);
+    }
+
     function switchButton(prefixId, idx, n) {
       const btn = el('button', { id: prefixId + '-schalter' + n, class: 'hidden switch', onclick: `requestAction('room:${idx}:Schalter${n}', 1);` });
       const icon = el('i', { id: prefixId + '-schalter' + n + 'icon', class: 'hidden switch-icon' });

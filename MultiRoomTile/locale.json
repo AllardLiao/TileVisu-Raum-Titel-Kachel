@@ -130,7 +130,12 @@
       "Room Tile instance": "Room-Tile-Instanz",
       "Apply individual settings": "Individuelle Einstellungen übernehmen",
       "Move info center into info bar": "Infocenter in Infoleiste überführen",
-      "Import room": "Zimmer importieren"
+      "Import room": "Zimmer importieren",
+      "Vertical alignment": "Senkrechte Ausrichtung",
+      "Vertical alignment (room name)": "Senkrechte Ausrichtung (Zimmername)",
+      "Middle between info bar and menu bar": "Mitte zwischen Info- und Menüleiste",
+      "Middle of tile": "Mitte der Kachel",
+      "Use global default": "Globale Vorgabe verwenden"
     }
   }
 }

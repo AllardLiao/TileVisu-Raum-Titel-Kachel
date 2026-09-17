@@ -379,3 +379,49 @@ assertSameValue('legacy_presentation_uses_profile_colors', ['#00FF00', '', '#00F
 assertSameValue('multiroom_switch_presentation_ignores_profile_colors', ['', '', ''], $multiColors['cn'] ?? null);
 assertSameValue('multiroom_status_color_ignores_profile_under_switch_presentation', ['', '', ''], $multiColors['cs'] ?? null);
 assertSameValue('multiroom_legacy_presentation_uses_profile_colors', ['#00FF00', '', '#00FF00'], $multiColors['cl'] ?? null);
+
+// ---------------------------------------------------------------------------
+// Senkrechte Ausrichtung des Zimmernamens: Zimmerwert schlaegt die globale
+// Vorgabe, "global" faellt auf sie zurueck.
+// ---------------------------------------------------------------------------
+
+function roomNameAlignOf(string $tile, int $roomIndex = 0): ?string
+{
+    $payload = json_decode(payloadOf($tile), true);
+    return $payload['rooms'][$roomIndex]['roomnamealign'] ?? null;
+}
+
+ob_start();
+$rt->SetProperty('RoomNameAlign', 'tile');
+$rt->ApplyChanges();
+$alignTile = (string)$rt->GetVisualizationTile();
+$rt->SetProperty('RoomNameAlign', 'bars');
+$rt->ApplyChanges();
+$alignBars = (string)$rt->GetVisualizationTile();
+
+$mr->SetProperty('Default_RoomNameAlign', 'bars');
+$mr->SetProperty('Rooms', json_encode([
+    ['RoomName' => 'Folgt global'],
+    ['RoomName' => 'Eigene Wahl', 'RoomNameAlign' => 'tile'],
+]));
+$mr->ApplyChanges();
+$multiTile = (string)$mr->GetVisualizationTile();
+ob_end_clean();
+
+echo "\n== Ausrichtung Zimmername ==\n";
+assertSameValue('roomtile_align_tile', 'tile', roomNameAlignOf($alignTile));
+assertSameValue('roomtile_align_bars', 'bars', roomNameAlignOf($alignBars));
+assertSameValue('multiroom_align_follows_default', 'bars', roomNameAlignOf($multiTile, 0));
+assertSameValue('multiroom_align_room_wins', 'tile', roomNameAlignOf($multiTile, 1));
+
+// Info-Center (nur RoomTile) wird unabhaengig vom Zimmernamen ausgerichtet
+ob_start();
+$rt->SetProperty('InfoCenterAlign', 'tile');
+$rt->ApplyChanges();
+$infoCenterTile = (string)$rt->GetVisualizationTile();
+ob_end_clean();
+$payloadBars = json_decode(payloadOf($alignBars), true);
+$payloadTile = json_decode(payloadOf($infoCenterTile), true);
+assertSameValue('infocenter_align_default_bars', 'bars', $payloadBars['rooms'][0]['infocenteralign'] ?? null);
+assertSameValue('infocenter_align_tile', 'tile', $payloadTile['rooms'][0]['infocenteralign'] ?? null);
+assertSameValue('infocenter_align_independent', 'bars', $payloadTile['rooms'][0]['roomnamealign'] ?? null);

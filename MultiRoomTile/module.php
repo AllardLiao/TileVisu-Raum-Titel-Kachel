@@ -109,6 +109,7 @@ class MultiRoomTile extends IPSModuleStrict
         $this->RegisterPropertyInteger('Default_MenuBackgroundColor', 0x000000);
         $this->RegisterPropertyInteger('Default_TileBackgroundColor', 0x000000);
         $this->RegisterPropertyInteger('Default_RoomNameFontSize', 45);
+        $this->RegisterPropertyString('Default_RoomNameAlign', 'tile');
         $this->RegisterPropertyInteger('Default_RoomNameFontColor', 0xFFFFFF);
         $this->RegisterPropertyFloat('Default_ImageTransparency', 70.0);
         // Info-Top Badge Hintergrund (einheitlich)
@@ -1182,6 +1183,7 @@ class MultiRoomTile extends IPSModuleStrict
             'MenuBackgroundColor'=> (int)$this->ReadPropertyInteger('Default_MenuBackgroundColor'),
             'TileBackgroundColor'   => (int)$this->ReadPropertyInteger('Default_TileBackgroundColor'),
             'RoomNameFontSize'   => (int)$this->ReadPropertyInteger('Default_RoomNameFontSize'),
+            'RoomNameAlign'      => (string)$this->ReadPropertyString('Default_RoomNameAlign'),
             'RoomNameFontColor'     => (int)$this->ReadPropertyInteger('Default_RoomNameFontColor'),
             'ImageTransparency'          => (float)$this->ReadPropertyFloat('Default_ImageTransparency'),
             'InfoTopTransparency'       => (float)$this->ReadPropertyFloat('Default_InfoTopTransparency'),
@@ -1329,6 +1331,13 @@ class MultiRoomTile extends IPSModuleStrict
         } else {
             $r['roomnamefontsize'] = $rn;
         }
+        // Senkrechte Ausrichtung des Zimmernamens: zwischen den Leisten oder in der ganzen Kachel
+        $rnAlign = (string)($room['RoomNameAlign'] ?? 'global');
+        if ($rnAlign === '' || $rnAlign === 'global') {
+            $rnAlign = (string)($defaults['RoomNameAlign'] ?? 'bars');
+        }
+        $r['roomnamealign'] = ($rnAlign === 'tile') ? 'tile' : 'bars';
+
         $rncol = null;
         if (array_key_exists('RoomNameFontColor', $room)) { $rncol = (int)$room['RoomNameFontColor']; }
         if ($rncol === null || $rncol === -1) { $rncol = (int)($defaults['RoomNameFontColor'] ?? 0xFFFFFF); }

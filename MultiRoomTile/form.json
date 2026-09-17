@@ -65,7 +65,8 @@
         { "type": "RowLayout", "items": [
           { "type": "NumberSpinner", "name": "Default_RoomNameFontSize", "caption": "Font size", "digits": 0, "minimum": 8, "maximum": 200, "suffix": "px", "width": "300px" },
           { "type": "SelectColor", "name": "Default_RoomNameFontColor", "caption": "Font color", "allowTransparent": true, "width": "300px" }
-        ]}
+        ]},
+        { "type": "Select", "name": "Default_RoomNameAlign", "caption": "Vertical alignment (room name)", "options": [ { "caption": "Middle between info bar and menu bar", "value": "bars" }, { "caption": "Middle of tile", "value": "tile" } ] }
       ]
     },
     {
@@ -148,7 +149,8 @@
                 { "type": "SelectObject", "name": "TargetLinkValue", "caption": "New link target:" }
               ]},
               { "type": "SelectColor", "name": "RoomNameFontColor", "caption": "Font color", "allowTransparent": true },
-              { "type": "NumberSpinner", "name": "RoomNameFontSize", "caption": "Font size", "digits": 0, "minimum": -1, "maximum": 200 }
+              { "type": "NumberSpinner", "name": "RoomNameFontSize", "caption": "Font size", "digits": 0, "minimum": -1, "maximum": 200 },
+              { "type": "Select", "name": "RoomNameAlign", "caption": "Vertical alignment", "options": [ { "caption": "Use global default", "value": "global" }, { "caption": "Middle between info bar and menu bar", "value": "bars" }, { "caption": "Middle of tile", "value": "tile" } ] }
             ]},
             { "type": "ExpansionPanel", "caption": "Background", "expanded": true, "items": [
               { "type": "SelectVariable", "name": "BackgroundImageUrl", "caption": "URL Background image (String Variable)", "validVariableTypes": [3] },

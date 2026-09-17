@@ -52,7 +52,7 @@
       z-index: 0;
     }
 
-    .tile > :not(.tile-bg):not(.tile-bg2):not(.row-top):not(.center) { position: relative; z-index: 2; }
+    .tile > :not(.tile-bg):not(.tile-bg2):not(.row-top):not(.center):not(.center-info) { position: relative; z-index: 2; }
 
     .row-top {
       position: static;
@@ -132,12 +132,13 @@
       opacity: 0.5;
     }
 
+    /* Senkrechte Mitte: zwischen den gemessenen Leisten (Standard) oder in der ganzen Kachel */
     .center { 
       position: absolute;
       left: 0;
       right: 0;
-      top: 0;
-      bottom: var(--middle-gap);
+      top: var(--bar-top, 0px);
+      bottom: var(--bar-bottom, var(--middle-gap));
       display: flex;
       align-items: center;
       justify-content: center;
@@ -145,8 +146,11 @@
       pointer-events: none;
       z-index: 4;
       padding: 0 20px;
-      padding-top: 60px;
       padding-bottom: 0;
+    }
+    .center.align-tile {
+      top: 0;
+      bottom: 0;
     }
     .center * {
       pointer-events: none;
@@ -169,9 +173,23 @@
       text-align: left;
       gap: 8px;
       color: var(--infomiddle-color, #fff);
-      margin-bottom: 20px;
     }
-    .middle-info-abs { position: absolute; bottom: 0; transform: none; }
+    /* Info-Center: senkrecht mittig im gewaehlten Bereich */
+    .center-info {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: var(--bar-top, 0px);
+      bottom: var(--bar-bottom, var(--middle-gap));
+      pointer-events: none;
+      z-index: 3;
+    }
+    .center-info.align-tile {
+      top: 0;
+      bottom: 0;
+    }
+    .center-info * { pointer-events: none; }
+    .middle-info-abs { position: absolute; top: 50%; bottom: auto; transform: translateY(-50%); }
     .middle-info-abs.middle-info-left { left: var(--middle-edge-padding, 20px); }
     .middle-info-abs.middle-info-right { right: var(--middle-edge-padding, 20px); }
     .middle-info-left { align-items: flex-start; text-align: left; }
@@ -743,9 +761,13 @@
       const rn = el('p', { id: id + '-roomname', class: 'roomname' }, '');
       rnWrap.appendChild(rn);
       center.appendChild(rnWrap);
-      center.appendChild(middleInfo(id, 'infomiddleleft', false));
-      center.appendChild(middleInfo(id, 'infomiddleright', true));
       tile.appendChild(center);
+
+      // Info-Center in eigenem Bereich, damit es unabhaengig vom Zimmernamen ausgerichtet werden kann
+      const centerInfo = el('div', { class: 'center-info' });
+      centerInfo.appendChild(middleInfo(id, 'infomiddleleft', false));
+      centerInfo.appendChild(middleInfo(id, 'infomiddleright', true));
+      tile.appendChild(centerInfo);
 
       // menubar
       const menu = el('div', { id: id + '-menubar', class: 'menubar' + (room.menuswitch ? '' : ' is-hidden') });
@@ -767,6 +789,7 @@
       tile.appendChild(menu);
 
       grid.appendChild(tile);
+      observeTileBars(tile);
       return tile;
     }
 
@@ -1406,6 +1429,8 @@
       if (rn && room.roomname !== undefined) rn.textContent = room.roomname;
       if (room.roomnamefontsize !== undefined) rn.style.fontSize = room.roomnamefontsize + 'px';
       if (room.roomnamefontcolor) rn.style.color = room.roomnamefontcolor;
+      applyRoomNameAlign(root, room.roomnamealign);
+      applyInfoCenterAlign(root, room.infocenteralign);
 
       // Ensure top info layout matches setting
       setTopInfoLayout(id, !!room.infotopcentered);

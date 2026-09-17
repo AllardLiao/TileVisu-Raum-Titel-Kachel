@@ -40,6 +40,7 @@ class RoomTile extends IPSModuleStrict
         $this->RegisterPropertyBoolean('TransparentStatusColors', true);
         $this->RegisterPropertyInteger('Default_TileBackgroundColor', 0x000000);
         $this->RegisterPropertyInteger('Default_RoomNameFontSize', 45);
+        $this->RegisterPropertyString('Default_RoomNameAlign', 'bars');
         $this->RegisterPropertyFloat('Default_ImageTransparency', 70.0);
         $this->RegisterPropertyInteger('Default_ButtonHeight', 25);
         $this->RegisterPropertyInteger('Default_ButtonBorderRadius', 10);
@@ -118,6 +119,8 @@ class RoomTile extends IPSModuleStrict
         $this->RegisterPropertyInteger('TileBackgroundColor', -1);
         $this->RegisterPropertyInteger('RoomNameFontColor', -1);
         $this->RegisterPropertyInteger('RoomNameFontSize', 50);
+        $this->RegisterPropertyString('RoomNameAlign', 'bars');
+        $this->RegisterPropertyString('InfoCenterAlign', 'bars');
         $this->RegisterPropertyInteger('InfoFontSize', -1);
         $this->RegisterPropertyInteger('InfoFontColor', -1);
         $this->RegisterPropertyInteger('MenuFontSize', -1);
@@ -1141,6 +1144,7 @@ class RoomTile extends IPSModuleStrict
             'InfoTopBorderRadius'      => (int)$this->ReadPropertyInteger('Default_InfoTopBorderRadius'),
             'TileBackgroundColor'   => (int)$this->ReadPropertyInteger('Default_TileBackgroundColor'),
             'RoomNameFontSize'   => (int)$this->ReadPropertyInteger('Default_RoomNameFontSize'),
+            'RoomNameAlign'      => (string)$this->ReadPropertyString('Default_RoomNameAlign'),
             'ImageTransparency'          => (float)$this->ReadPropertyFloat('Default_ImageTransparency')
         ];
         // Normalisiere Transparent(-1) für globale Defaults auf sinnvolle Standardwerte
@@ -1245,6 +1249,17 @@ class RoomTile extends IPSModuleStrict
         } else {
             $r['roomnamefontsize'] = $rn;
         }
+        // Senkrechte Ausrichtung des Zimmernamens: zwischen den Leisten oder in der ganzen Kachel
+        $rnAlign = (string)($room['RoomNameAlign'] ?? 'global');
+        if ($rnAlign === '' || $rnAlign === 'global') {
+            $rnAlign = (string)($defaults['RoomNameAlign'] ?? 'bars');
+        }
+        $r['roomnamealign'] = ($rnAlign === 'tile') ? 'tile' : 'bars';
+
+        // Senkrechte Ausrichtung des Info-Centers
+        $icAlign = (string)($room['InfoCenterAlign'] ?? 'bars');
+        $r['infocenteralign'] = ($icAlign === 'tile') ? 'tile' : 'bars';
+
         $rncol = null;
         if (array_key_exists('RoomNameFontColor', $room)) { $rncol = (int)$room['RoomNameFontColor']; }
         if ($rncol === null || $rncol === -1) { $rncol = 0xFFFFFF; }
@@ -1595,6 +1610,8 @@ class RoomTile extends IPSModuleStrict
         $room['TileBackgroundColor'] = (int)$this->ReadPropertyInteger('TileBackgroundColor');
         $room['RoomNameFontColor'] = (int)$this->ReadPropertyInteger('RoomNameFontColor');
         $room['RoomNameFontSize'] = (int)$this->ReadPropertyInteger('RoomNameFontSize');
+        $room['RoomNameAlign'] = (string)$this->ReadPropertyString('RoomNameAlign');
+        $room['InfoCenterAlign'] = (string)$this->ReadPropertyString('InfoCenterAlign');
         $room['InfoFontSize'] = (int)$this->ReadPropertyInteger('InfoFontSize');
         $room['InfoFontColor'] = (int)$this->ReadPropertyInteger('InfoFontColor');
         $room['MenuFontSize'] = (int)$this->ReadPropertyInteger('MenuFontSize');
