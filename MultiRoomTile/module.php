@@ -23,6 +23,37 @@ class MultiRoomTile extends IPSModuleStrict
         'Default_BgFilterGrayscaleMin', 'Default_BgFilterGrayscaleMax',
     ];
 
+    /** Felder eines Zimmers, die es auch als Eigenschaft der Room-Tile gibt */
+    private const ROOM_FIELDS = [
+        'RoomName', 'Target', 'TargetLinkId', 'TargetLinkValue',
+        'RoomNameFontColor', 'RoomNameFontSize',
+        'InfoTopCentered', 'InfoFontSize', 'InfoFontColor', 'InfoItems',
+        'InfoTopTransparency', 'InfoTopBackgroundColor',
+        'BackgroundImage', 'BackgroundImage2', 'BackgroundImageUrl', 'ImageTransparency',
+        'TileBackgroundColor', 'LightStatus', 'DimValue',
+        'BgFilterBrightnessMin', 'BgFilterBrightnessMax',
+        'BgFilterContrastMin', 'BgFilterContrastMax',
+        'BgFilterGrayscaleMin', 'BgFilterGrayscaleMax',
+        'MenuSwitch', 'MenuFontSize', 'MenuFontColor', 'MenuTransparency',
+        'MenuBackgroundColor', 'UseImageColorsForButtons', 'TransparentMenuStatusColors',
+        'GroupMenuInfoElements', 'SwitchAlignment', 'SwitchDistribute', 'MenuItems',
+    ];
+
+    /** Raumfelder, die in der Room-Tile anders heissen */
+    private const ROOM_FIELD_PROPERTIES = [
+        'InfoTopTransparency'    => 'Default_InfoTopTransparency',
+        'InfoTopBackgroundColor' => 'Default_InfoTopBackgroundColor',
+    ];
+
+    /** Felder, die als JSON-Liste gespeichert sind */
+    private const ROOM_LIST_FIELDS = ['InfoItems', 'MenuItems'];
+
+    /** Info-Center der Room-Tile: Eigenschaft => Bereich in der Infoleiste */
+    private const INFO_CENTER_FIELDS = [
+        'InfoMiddleLeft'  => 'left',
+        'InfoMiddleRight' => 'right',
+    ];
+
     /** Nur im Verbund sinnvoll, gehoert nicht in eine eigenstaendige Kachel */
     private const EXPORT_SKIPPED_ROOM_FIELDS = ['TargetCategoryId'];
 
@@ -874,6 +905,185 @@ class MultiRoomTile extends IPSModuleStrict
         } catch (Throwable $e) {
             return null;
         }
+    }
+
+    /**
+     * Fuellt die Auswahl im Import-Bereich mit allen vorhandenen
+     * Room-Tile-Instanzen. Wird ueber den Knopf im Formular ausgeloest.
+     *
+     * @return string Die gesetzten Optionen als JSON (Name und Pfad je Instanz)
+     */
+    public function RefreshImportInstances(): string
+    {
+        $options = [];
+        foreach (IPS_GetInstanceListByModuleID(self::ROOM_TILE_MODULE_ID) as $instanceId) {
+            $options[] = [
+                'caption' => IPS_GetName($instanceId) . ' (' . $this->GetObjectPath($instanceId) . ')',
+                'value'   => (int)$instanceId,
+            ];
+        }
+        if (empty($options)) {
+            $options[] = ['caption' => '-', 'value' => 0];
+        }
+        $this->UpdateFormField('ImportInstanceId', 'options', json_encode($options));
+        $this->UpdateFormField('ImportInstanceId', 'value', (int)$options[0]['value']);
+        return json_encode($options);
+    }
+
+    /**
+     * Uebernimmt eine eigenstaendige Room-Tile-Instanz als weiteres Zimmer.
+     *
+     * @param int  $RoomTileID         Room-Tile-Instanz
+     * @param bool $IndividualSettings true: Darstellung der Instanz uebernehmen,
+     *                                 false: globale Einstellungen dieser Kachel verwenden
+     * @param bool $MoveInfoCenter     Info-Center der Instanz als Eintraege in die Infoleiste uebernehmen
+     */
+    public function ImportRoom(int $RoomTileID, bool $IndividualSettings, bool $MoveInfoCenter): void
+    {
+        if ($RoomTileID <= 0 || !@IPS_InstanceExists($RoomTileID)) {
+            throw new Exception('Instanz #' . $RoomTileID . ' existiert nicht');
+        }
+        $instance = IPS_GetInstance($RoomTileID);
+        if (($instance['ModuleInfo']['ModuleID'] ?? '') !== self::ROOM_TILE_MODULE_ID) {
+            throw new Exception('Instanz #' . $RoomTileID . ' ist keine Room-Tile');
+        }
+
+        $room = $this->buildRoomFromInstance($RoomTileID, $IndividualSettings, $MoveInfoCenter);
+
+        $rooms = @json_decode($this->ReadPropertyString('Rooms'), true);
+        if (!is_array($rooms)) {
+            $rooms = [];
+        }
+        $rooms[] = $room;
+        IPS_SetProperty($this->InstanceID, 'Rooms', json_encode($rooms));
+        IPS_ApplyChanges($this->InstanceID);
+
+        $this->SendDebug('ImportRoom', 'Instanz #' . $RoomTileID . ' als Zimmer "' . $room['RoomName'] . '" uebernommen', 0);
+        $this->ReloadForm();
+    }
+
+    /**
+     * Zimmer-Zeile aus den Eigenschaften einer Room-Tile-Instanz.
+     */
+    private function buildRoomFromInstance(int $RoomTileID, bool $IndividualSettings, bool $MoveInfoCenter): array
+    {
+        $room = [];
+        foreach (self::ROOM_FIELDS as $field) {
+            $property = self::ROOM_FIELD_PROPERTIES[$field] ?? $field;
+            try {
+                $value = @IPS_GetProperty($RoomTileID, $property);
+            } catch (Throwable $e) {
+                continue;
+            }
+            if (in_array($field, self::ROOM_LIST_FIELDS, true)) {
+                $decoded = is_string($value) ? @json_decode($value, true) : $value;
+                $room[$field] = is_array($decoded) ? $decoded : [];
+                continue;
+            }
+            $room[$field] = $value;
+        }
+
+        $name = trim((string)($room['RoomName'] ?? ''));
+        if ($name === '') {
+            $name = IPS_GetName($RoomTileID);
+        }
+        $room['RoomName'] = $name;
+        $room['TargetCategoryId'] = 0;
+
+        if ($MoveInfoCenter) {
+            $room['InfoItems'] = array_merge(
+                is_array($room['InfoItems'] ?? null) ? $room['InfoItems'] : [],
+                $this->BuildInfoCenterItems($RoomTileID)
+            );
+        }
+
+        if (!$IndividualSettings) {
+            // "-1" bzw. 0 heisst in einem Zimmer: globale Einstellung dieser Kachel
+            foreach (self::EXPORT_COLOR_FIELDS as $field) {
+                if (array_key_exists($field, $room)) {
+                    $room[$field] = -1;
+                }
+            }
+            foreach (self::EXPORT_SIZE_FIELDS as $field) {
+                if (array_key_exists($field, $room)) {
+                    $room[$field] = 0;
+                }
+            }
+            foreach (self::EXPORT_PERCENT_FIELDS as $field) {
+                if (array_key_exists($field, $room)) {
+                    $room[$field] = -1.0;
+                }
+            }
+            if (array_key_exists('InfoTopTransparency', $room)) {
+                $room['InfoTopTransparency'] = -1.0;
+            }
+        }
+
+        return $room;
+    }
+
+    /**
+     * Info-Center-Variablen einer Room-Tile als Eintraege fuer die Infoleiste.
+     * Links bleibt links, rechts bleibt rechts.
+     */
+    private function BuildInfoCenterItems(int $RoomTileID): array
+    {
+        $items = [];
+        foreach (self::INFO_CENTER_FIELDS as $property => $area) {
+            try {
+                $variableId = (int)@IPS_GetProperty($RoomTileID, $property);
+            } catch (Throwable $e) {
+                continue;
+            }
+            if ($variableId <= 0 || !@IPS_VariableExists($variableId)) {
+                continue;
+            }
+            $items[] = [
+                'Id'          => $this->NewListId('i'),
+                'Area'        => $area,
+                'VariableId'  => $variableId,
+                'ShowName'    => (bool)$this->ReadForeignFlag($RoomTileID, $property . 'ShowName'),
+                'ShowIcon'    => (bool)$this->ReadForeignFlag($RoomTileID, $property . 'ShowIcon'),
+                'ShowValue'   => (bool)$this->ReadForeignFlag($RoomTileID, $property . 'ShowValue'),
+                'UseVarColor' => false,
+                'ColorTrue'   => -1,
+                'ColorFalse'  => -1,
+                'AltName'     => '',
+            ];
+        }
+        return $items;
+    }
+
+    private function ReadForeignFlag(int $RoomTileID, string $property): bool
+    {
+        try {
+            return (bool)@IPS_GetProperty($RoomTileID, $property);
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+
+    private function NewListId(string $prefix): string
+    {
+        try {
+            return $prefix . bin2hex(random_bytes(6));
+        } catch (Throwable $e) {
+            return $prefix . substr(sha1(uniqid('', true)), 0, 12);
+        }
+    }
+
+    /**
+     * Pfad eines Objekts ohne den eigenen Namen, z.B. "Kacheln\Erdgeschoss".
+     */
+    private function GetObjectPath(int $objectId): string
+    {
+        $parts = [];
+        $parentId = (int)(IPS_GetObject($objectId)['ParentID'] ?? 0);
+        while ($parentId > 0) {
+            array_unshift($parts, IPS_GetName($parentId));
+            $parentId = (int)(IPS_GetObject($parentId)['ParentID'] ?? 0);
+        }
+        return empty($parts) ? 'Wurzel' : implode(' \ ', $parts);
     }
 
     private function GetFullUpdateMessage(): array
